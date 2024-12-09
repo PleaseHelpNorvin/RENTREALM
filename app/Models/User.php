@@ -6,11 +6,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
-{
+{  
+    const LANDLORD = 'landlord';
+    const HANDYMAN = 'handyman';
+    const TENANT = 'tenant';
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role'
     ];
 
     /**
@@ -44,5 +49,32 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    //relationships
+    public function userProfile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    // Role checkers
+    public function isLandlord(): bool
+    {
+        return $this->role === self::LANDLORD;
+    }
+
+    public function isHandyman(): bool
+    {
+        return $this->role === self::HANDYMAN;
+    }
+
+    public function isTenant(): bool
+    {
+        return $this->role === self::TENANT;
+    }
+
+    // General role checker (optional)
+    public function isRole(string $role): bool
+    {
+        return $this->role === $role;
     }
 }
