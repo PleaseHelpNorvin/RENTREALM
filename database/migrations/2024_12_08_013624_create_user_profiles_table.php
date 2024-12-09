@@ -14,11 +14,23 @@ return new class extends Migration
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('phone_number');
-            $table->string('address');
             $table->string('profile_picture_url')->nullable();
-            $table->string('emergency_contact');
-            $table->string('bio')->nullable();
+            $table->string('phone_number');
+            $table->string('social_media_links')->nullable();
+
+            //address related column
+            $table->text('address')->nullable();
+            $table->string('city', 100)->nullable();
+            $table->string('state', 100)->nullable();
+            $table->string('country', 100)->nullable();
+            $table->string('postal_code', 20)->nullable();
+            //id related column
+            $table->string('driver_license_number')->nullable();
+            $table->string('national_id')->nullable();
+            $table->string('passport_number')->nullable();
+            $table->string('social_security_number')->nullable();
+
+            $table->string('occupation')->nullable();
             $table->timestamps();
         });
     }

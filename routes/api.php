@@ -3,37 +3,51 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\auth\AuthController;
+use App\Http\Controllers\rest\RoomController;
 use App\Http\Controllers\rest\PropertyController;
+use App\Http\Controllers\rest\UserProfileController;
 
 
 
 Route::post('login', [AuthController::class, 'login']);
-
-Route::post('create-tenant', [AuthController::class, 'create']);
+Route::post('create/tenant', [AuthController::class, 'create']);
 
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
-        Route::post('create', [UserProfileController::class, '']);
-        Route::get('profile', [AuthController::class, 'profile']);
-
-        
+        Route::get('index', [UserProfileController::class,'index']);
+        Route::post('store', [UserProfileController::class, 'store']);
+        Route::post('show/{id}', [UserProfileController::class, 'show']);
+        Route::get('edit/{id}', [UserProfileController::class,'edit']);
+        Route::post('update/{id}', [UserProfileController::class, 'update']);
+        Route::post('delete/{id}', [UserProfileController::class, 'delete']);
     });
 
 
     Route::prefix('maintenance')->group(function () {
-        // Route::post('create', [MaintenanceController::class, 'create']);
+        
 
     });
 });
+
 Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
+    //property working crud
     Route::prefix('property')->group(function () {
-        Route::post('create', [PropertyController::class, 'create']);
-
-
+        Route::get('index', [PropertyController::class, 'index']);
+        Route::post('store', [PropertyController::class, 'store']);
+        Route::get('show/{id}',[PropertyController::class, 'show']);
+        Route::post('update/{id}', [PropertyController::class, 'update']);
+        Route::post('destroy/{id}', [PropertyController::class, 'destroy']);
     });
-    Route:
+    Route::prefix('room')->group(function() {
+        Route::get('index', [RoomController::class, 'index']);
+        Route::post('store', [RoomController::class, 'store']);
+        Route::get('show/{id}',[RoomController::class, 'show']);
+        Route::post('update/{id}', [RoomController::class, 'update']);
+        Route::post('destroy/{id}', [RoomController::class, 'destroy']);
+    });
 });
+
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
      
 
