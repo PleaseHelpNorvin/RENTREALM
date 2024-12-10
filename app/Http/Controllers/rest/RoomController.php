@@ -88,7 +88,7 @@ class RoomController extends Controller
 
         // Validate the request data
         $validatedData = $request->validate([
-            'property_id' => 'required|exists:properties,id',
+            'property_id' => 'exists:properties,id',
             'room_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate image
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',

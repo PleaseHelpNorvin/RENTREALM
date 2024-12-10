@@ -17,10 +17,8 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
         Route::post('store', [UserProfileController::class, 'store']);
-        Route::post('show/{id}', [UserProfileController::class, 'show']);
-        Route::get('edit/{id}', [UserProfileController::class,'edit']);
-        Route::post('update/{id}', [UserProfileController::class, 'update']);
-        Route::post('delete/{id}', [UserProfileController::class, 'delete']);
+        Route::post('show/{user_id}', [UserProfileController::class, 'showByUserId']);
+        Route::post('update/{user_id}', [UserProfileController::class, 'update']);
     });
 
 
@@ -39,6 +37,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [PropertyController::class, 'update']);
         Route::post('destroy/{id}', [PropertyController::class, 'destroy']);
     });
+    
     Route::prefix('room')->group(function() {
         Route::get('index', [RoomController::class, 'index']);
         Route::post('store', [RoomController::class, 'store']);
@@ -46,6 +45,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [RoomController::class, 'update']);
         Route::post('destroy/{id}', [RoomController::class, 'destroy']);
     });
+
+    // Route::prefix('profile')->group(function () {
+    //     Route::post('show/{id}', [UserProfileController::class, 'show']);
+    // });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

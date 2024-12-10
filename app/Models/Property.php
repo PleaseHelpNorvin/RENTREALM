@@ -13,7 +13,7 @@ class Property extends Model
         'name', 
         'address', 
         'city', 
-        'state', 
+        'municipality', 
         'barangay', 
         'zone', 
         'street',
@@ -29,6 +29,6 @@ class Property extends Model
 
     public function rooms()
     {
-        return $this->hasMany(Rooms::class);
+        return $this->hasMany(Room::class);
     }
 }   

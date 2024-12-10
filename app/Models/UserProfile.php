@@ -16,8 +16,11 @@ class UserProfile extends Model
         'social_media_links',
         'address',
         'city',
-        'state',
+        'municipality',
         'country',
+        'barangay', // Added barangay
+        'zone',     // Added zone
+        'street',   // Added street
         'postal_code',
         'driver_license_number',
         'national_id',
@@ -25,6 +28,7 @@ class UserProfile extends Model
         'social_security_number',
         'occupation',
     ];
+
 
     protected $casts = [
         'created_at' => 'datetime',

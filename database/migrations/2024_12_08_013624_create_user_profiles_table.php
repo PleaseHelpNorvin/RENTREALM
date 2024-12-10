@@ -20,9 +20,12 @@ return new class extends Migration
 
             //address related column
             $table->text('address')->nullable();
-            $table->string('city', 100)->nullable();
-            $table->string('state', 100)->nullable();
             $table->string('country', 100)->nullable();
+            $table->string('city', 100)->nullable();
+            $table->string('municipality', 100)->nullable();
+            $table->string('barangay')->nullable();
+            $table->string('zone')->nullable();
+            $table->string('street')->nullable();
             $table->string('postal_code', 20)->nullable();
             //id related column
             $table->string('driver_license_number')->nullable();
