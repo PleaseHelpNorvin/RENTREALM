@@ -138,8 +138,9 @@ class UserProfileController extends Controller
     {
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validation for image upload
+            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|url',
             'phone_number' => 'required|string|max:255',
+            'social_media_links' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'municipality' => 'nullable|string|max:100',  // Added municipality validation
