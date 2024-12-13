@@ -97,4 +97,11 @@ class AuthController extends Controller
             'user' => $newUser,
         ], 'User created and logged in successfully');
     }
+
+    public function logout(Request $request) 
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return $this->successResponse(null,'Logged out successfully');
+    }
 }

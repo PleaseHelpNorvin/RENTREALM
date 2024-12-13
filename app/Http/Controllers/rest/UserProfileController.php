@@ -105,10 +105,15 @@ class UserProfileController extends Controller
         $profile = UserProfile::where('user_id', $user_id)->first();
 
         if (!$profile) {
-            return $this->notFoundResponse(null, 'Profile not found');
+            return $this->notFoundResponse(null, 'Profile not f ound');
         }
 
-        return $this->successResponse($profile);
+        // Convert the `profile_picture_url` to a full URL
+        if ($profile->profile_picture_url) {
+            $profile->profile_picture_url = asset($profile->profile_picture_url);
+        }
+
+        return $this->successResponse(['profile' => $profile], 'User Profile Fetched Successfully');
     }
 
     /**

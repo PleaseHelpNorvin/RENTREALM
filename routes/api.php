@@ -11,13 +11,13 @@ use App\Http\Controllers\rest\UserProfileController;
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);
-
+Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
         Route::post('store', [UserProfileController::class, 'store']);
-        Route::post('show/{user_id}', [UserProfileController::class, 'showByUserId']);
+        Route::get('show/{user_id}', [UserProfileController::class, 'showByUserId']);
         Route::post('update/{user_id}', [UserProfileController::class, 'update']);
     });
 
