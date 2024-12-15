@@ -29,8 +29,11 @@ class UserProfileController extends Controller
         $user_id = $request->query('user_id');
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validates an image file
+            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
+            // 'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validates an image file
             'phone_number' => 'required|string|max:255',
+            'social_media_links' => 'required|string|max:255',
             'municipality' => 'required|string|max:100',
             'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
@@ -65,6 +68,7 @@ class UserProfileController extends Controller
             'user_id' => $user_id,
             'profile_picture_url' => $validated['profile_picture_url'] ?? null,
             'phone_number' => $validated['phone_number'],
+            'social_media_links' => $validated['social_media_links'],
             'municipality' => $validated['municipality'] ?? null,
             'city' => $validated['city'] ?? null,
             'barangay' => $validated['barangay'] ?? null,
