@@ -17,6 +17,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
         Route::post('store', [UserProfileController::class, 'store']);
+        Route::post('storepicture', [UserProfileController::class, 'storePicture']);
         Route::get('show/{user_id}', [UserProfileController::class, 'showByUserId']);
         Route::post('update/{user_id}', [UserProfileController::class, 'update']);
     });

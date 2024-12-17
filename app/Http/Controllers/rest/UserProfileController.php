@@ -21,6 +21,48 @@ class UserProfileController extends Controller
         return $this->successResponse(['profile' => $profiles], 'Profiles Fetched Successfully');
     }
 
+    public function storePicture(Request $request) {
+        \Log::info($request->all());
+    
+        try {
+            // Step 1: Get user_id from query string
+            $user_id = $request->query('user_id');
+    
+            // Step 2: Validate the input
+            $validated = $request->validate([
+                'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Max 5MB
+            ]);
+    
+            // Step 3: Handle file upload
+            $profile_picture_url = null;
+            if ($request->hasFile('profile_picture_url')) {
+                $imagePath = $request->file('profile_picture_url')->store('profile_pictures', 'public');
+                $profile_picture_url = '/storage/' . $imagePath; // Generate public URL
+            } else {
+                return $this->validationErrorResponse(['profile_picture_url' => 'File upload failed'], 'Validation Error');
+            }
+    
+            // Step 4: Check if UserProfile already exists
+            $profile = UserProfile::updateOrCreate(
+                ['user_id' => $user_id],
+                ['profile_picture_url' => $profile_picture_url]
+            );
+    
+            // Step 5: Return a dynamic success response
+            $message = $profile->wasRecentlyCreated 
+                ? 'Profile picture created successfully.' 
+                : 'Profile picture updated successfully.';
+    
+            return $this->successResponse(['profilePicture'=> $profile], $message, 200);
+    
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+    
+            // Step 6: Handle any unexpected errors
+            return $this->internalServerErrorResponse(null, 'An error occurred while saving the profile picture');
+        }
+    }
+    
     /**
      * Store a newly created user profile in storage.
      */
@@ -33,7 +75,7 @@ class UserProfileController extends Controller
 
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Ensure it's an image and under 10MB
+            // 'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Ensure it's an image and under 10MB
             'phone_number' => 'nullable|string|max:255',
             'social_media_links' => 'nullable|string|max:255',
             'municipality' => 'nullable|string|max:100',
@@ -62,32 +104,53 @@ class UserProfileController extends Controller
         ]));
 
         // Handle file upload if present
-        $profile_picture_url = null;
-        if ($request->hasFile('profile_picture_url')) {
-            $imagePath = $request->file('profile_picture_url')->store('profile_pictures', 'public');
-            $profile_picture_url = '/storage/' . $imagePath; // Store public URL
-        }
-
+        // $profile_picture_url = null;
+        // if ($request->hasFile('profile_picture_url')) {
+        //     $imagePath = $request->file('profile_picture_url')->store('profile_pictures', 'public');
+        //     $profile_picture_url = '/storage/' . $imagePath; // Store public URL
+        // }
+        $profile = UserProfile::where('user_id', $user_id)->first();
         // Create the user profile with validated data and uploaded file
-        $profile = UserProfile::create([
-            'user_id' => $user_id,
-            'profile_picture_url' => $profile_picture_url,
-            'phone_number' => $validated['phone_number'] ?? null,
-            'social_media_links' => $validated['social_media_links'] ?? null,
-            'municipality' => $validated['municipality'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'barangay' => $validated['barangay'] ?? null,
-            'street' => $validated['street'] ?? null,
-            'zone' => $validated['zone'] ?? null,
-            'country' => $validated['country'] ?? null,
-            'postal_code' => $validated['postal_code'] ?? null,
-            'driver_license_number' => $validated['driver_license_number'] ?? null,
-            'national_id' => $validated['national_id'] ?? null,
-            'passport_number' => $validated['passport_number'] ?? null,
-            'social_security_number' => $validated['social_security_number'] ?? null,
-            'occupation' => $validated['occupation'] ?? null,
-            'address' => $address, // Store the constructed address
-        ]);
+        if ($profile) {
+            // Update the profile with the validated data
+            $profile->update([
+                'phone_number' => $validated['phone_number'] ?? null,
+                'social_media_links' => $validated['social_media_links'] ?? null,
+                'municipality' => $validated['municipality'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'barangay' => $validated['barangay'] ?? null,
+                'street' => $validated['street'] ?? null,
+                'zone' => $validated['zone'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'driver_license_number' => $validated['driver_license_number'] ?? null,
+                'national_id' => $validated['national_id'] ?? null,
+                'passport_number' => $validated['passport_number'] ?? null,
+                'social_security_number' => $validated['social_security_number'] ?? null,
+                'occupation' => $validated['occupation'] ?? null,
+                'address' => $address, // Store the constructed address
+            ]);
+        } else {
+            // If the profile doesn't exist, you can create a new one
+            $profile = UserProfile::create([
+                'user_id' => $user_id,
+                'phone_number' => $validated['phone_number'] ?? null,
+                'social_media_links' => $validated['social_media_links'] ?? null,
+                'municipality' => $validated['municipality'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'barangay' => $validated['barangay'] ?? null,
+                'street' => $validated['street'] ?? null,
+                'zone' => $validated['zone'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'driver_license_number' => $validated['driver_license_number'] ?? null,
+                'national_id' => $validated['national_id'] ?? null,
+                'passport_number' => $validated['passport_number'] ?? null,
+                'social_security_number' => $validated['social_security_number'] ?? null,
+                'occupation' => $validated['occupation'] ?? null,
+                'address' => $address, // Store the constructed address
+            ]);
+        }
 
         return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
     }
