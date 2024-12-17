@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('profile_picture_url')->nullable();
-            $table->string('phone_number');
+            $table->string('phone_number')->nullable();
             $table->string('social_media_links')->nullable();
 
             //address related column

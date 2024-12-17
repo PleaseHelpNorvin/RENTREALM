@@ -26,15 +26,17 @@ class UserProfileController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info($request->all());  // Log all incoming data
+
+        // Get user_id from the query string
         $user_id = $request->query('user_id');
+
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-
-            // 'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validates an image file
-            'phone_number' => 'required|string|max:255',
-            'social_media_links' => 'required|string|max:255',
-            'municipality' => 'required|string|max:100',
+            'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Ensure it's an image and under 10MB
+            'phone_number' => 'nullable|string|max:255',
+            'social_media_links' => 'nullable|string|max:255',
+            'municipality' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
             'barangay' => 'nullable|string|max:255',
@@ -47,28 +49,31 @@ class UserProfileController extends Controller
             'social_security_number' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
         ]);
-    
-        // Construct the address
-        $address = ($request->street ? $request->street . ', ' : '') .
-                   ($request->barangay ? $request->barangay . ', ' : '') .
-                   ($request->zone ? $request->zone . ', ' : '') .
-                   ($request->state ? $request->state . ', ' : '') .
-                   ($request->city ? $request->city . ', ' : '') .
-                   ($request->country ? $request->country . ', ' : '') .
-                   ($request->postal_code ? $request->postal_code : '');
-    
-        // Handle the file upload
+
+        // Construct the full address using available fields
+        $address = implode(', ', array_filter([
+            $request->street,
+            $request->barangay,
+            $request->zone,
+            $request->state,
+            $request->city,
+            $request->country,
+            $request->postal_code
+        ]));
+
+        // Handle file upload if present
+        $profile_picture_url = null;
         if ($request->hasFile('profile_picture_url')) {
             $imagePath = $request->file('profile_picture_url')->store('profile_pictures', 'public');
-            $validated['profile_picture_url'] = '/storage/' . $imagePath; // Store public URL
+            $profile_picture_url = '/storage/' . $imagePath; // Store public URL
         }
-    
-        // Create the user profile
+
+        // Create the user profile with validated data and uploaded file
         $profile = UserProfile::create([
             'user_id' => $user_id,
-            'profile_picture_url' => $validated['profile_picture_url'] ?? null,
-            'phone_number' => $validated['phone_number'],
-            'social_media_links' => $validated['social_media_links'],
+            'profile_picture_url' => $profile_picture_url,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'social_media_links' => $validated['social_media_links'] ?? null,
             'municipality' => $validated['municipality'] ?? null,
             'city' => $validated['city'] ?? null,
             'barangay' => $validated['barangay'] ?? null,
@@ -83,7 +88,7 @@ class UserProfileController extends Controller
             'occupation' => $validated['occupation'] ?? null,
             'address' => $address, // Store the constructed address
         ]);
-    
+
         return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
     }
 
@@ -109,7 +114,7 @@ class UserProfileController extends Controller
         $profile = UserProfile::where('user_id', $user_id)->first();
 
         if (!$profile) {
-            return $this->notFoundResponse(null, 'Profile not f ound');
+            return $this->notFoundResponse(null, 'Profile not found');
         }
 
         // Convert the `profile_picture_url` to a full URL
@@ -142,17 +147,17 @@ class UserProfileController extends Controller
     {
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|url',
+            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'phone_number' => 'required|string|max:255',
             'social_media_links' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
-            'municipality' => 'nullable|string|max:100',  // Added municipality validation
+            'municipality' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
-            'barangay' => 'nullable|string|max:255',      // Added barangay validation
-            'street' => 'nullable|string|max:255',         // Added street validation
-            'zone' => 'nullable|string|max:255',           // Added zone validation
+            'barangay' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'zone' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',
             'driver_license_number' => 'nullable|string|max:255',
             'national_id' => 'nullable|string|max:255',
@@ -184,7 +189,6 @@ class UserProfileController extends Controller
         $address = ($request->street ? $request->street . ', ' : '') .
                 ($request->barangay ? $request->barangay . ', ' : '') .
                 ($request->zone ? $request->zone . ', ' : '') .
-                // ($request->state ? $request->state . ', ' : '') .
                 ($request->city ? $request->city . ', ' : '') .
                 ($request->municipality ? $request->municipality . ', ' : '') .
                 ($request->country ? $request->country . ', ' : '') .
@@ -195,6 +199,7 @@ class UserProfileController extends Controller
 
         return $this->successResponse(['profile' => $profile], 'Profile updated successfully.');
     }
+
 
     
 }
