@@ -208,19 +208,19 @@ class UserProfileController extends Controller
      */
     public function update(Request $request, $user_id)
     {
+        \Log::info($request->all());  // Log all incoming data
+
         // Validate the input data
         $validated = $request->validate([
-            'profile_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'phone_number' => 'required|string|max:255',
+            // 'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Ensure it's an image and under 10MB
+            'phone_number' => 'nullable|string|max:255',
             'social_media_links' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
             'municipality' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
             'barangay' => 'nullable|string|max:255',
-            'street' => 'nullable|string|max:255',
             'zone' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',
             'driver_license_number' => 'nullable|string|max:255',
             'national_id' => 'nullable|string|max:255',
@@ -231,22 +231,6 @@ class UserProfileController extends Controller
 
         // Find the profile by user_id
         $profile = UserProfile::where('user_id', $user_id)->first();
-
-        if (!$profile) {
-            return $this->notFoundResponse(null, 'Profile not found');
-        }
-
-        // If there's a new profile picture, handle the file upload
-        if ($request->hasFile('profile_picture_url')) {
-            // Delete the old profile picture if it exists
-            if ($profile->profile_picture_url && file_exists(public_path($profile->profile_picture_url))) {
-                unlink(public_path($profile->profile_picture_url));
-            }
-
-            // Upload the new profile picture
-            $imagePath = $request->file('profile_picture_url')->store('profile_pictures', 'public');
-            $validated['profile_picture_url'] = '/storage/' . $imagePath; // Store public URL
-        }
 
         // Construct the updated address
         $address = ($request->street ? $request->street . ', ' : '') .
