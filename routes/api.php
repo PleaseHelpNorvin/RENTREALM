@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\rest\RoomController;
+use App\Http\Controllers\rest\UserController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\UserProfileController;
 
@@ -14,6 +15,10 @@ Route::post('create/tenant', [AuthController::class, 'create']);
 Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('user')->group(function() {
+        Route::get('index', [UserController::class, 'index']);
+        Route::post('update/{id}', [UserController::class, 'update']);
+    });
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
         Route::post('store', [UserProfileController::class, 'store']);
