@@ -17,6 +17,7 @@ Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctu
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function() {
         Route::get('index', [UserController::class, 'index']);
+        Route::get('show/{id}', [UserController::class, 'show']);
         Route::post('update/{id}', [UserController::class, 'update']);
     });
     Route::prefix('profile')->group(function () {

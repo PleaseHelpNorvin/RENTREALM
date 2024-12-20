@@ -20,6 +20,17 @@ class UserController extends Controller
 
         return $this->successResponse(['users' => $users], 'Users Fetched Successfully');
     }
+
+    public function show(Request $request, $id)
+    {
+        $user = User::find($id);
+        if(!$user) {
+            return $this->notFoundResponse(null, 'User not found');
+        }
+
+        return $this->successResponse(['user' => $user], 'Users Fetched by Id Successfully');
+
+    }
     
     public function update(Request $request, $id) 
     {
