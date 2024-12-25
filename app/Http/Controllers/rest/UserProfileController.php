@@ -21,13 +21,11 @@ class UserProfileController extends Controller
         return $this->successResponse(['profile' => $profiles], 'Profiles Fetched Successfully');
     }
 
-    public function storePicture(Request $request) {
+    public function storePicture(Request $request, $user_id) {
         \Log::info($request->all());
     
         try {
-            // Step 1: Get user_id from query string
-            $user_id = $request->query('user_id');
-    
+
             // Step 2: Validate the input
             $validated = $request->validate([
                 'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Max 5MB
