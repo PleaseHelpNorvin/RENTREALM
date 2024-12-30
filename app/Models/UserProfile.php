@@ -14,14 +14,14 @@ class UserProfile extends Model
         'profile_picture_url',
         'phone_number',
         'social_media_links',
+        //address part
         'address',
-        'city',
-        'municipality',
+        'line_1',
+        'line_2',
+        'province',
         'country',
-        'barangay', // Added barangay
-        'zone',     // Added zone
-        'street',   // Added street
         'postal_code',
+        //identification part
         'driver_license_number',
         'national_id',
         'passport_number',

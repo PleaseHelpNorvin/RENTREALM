@@ -17,15 +17,14 @@ return new class extends Migration
             $table->string('profile_picture_url')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('social_media_links')->nullable();
+            $table->string('occupation')->nullable();
 
             //address related column
             $table->text('address')->nullable();
+            $table->string('line_1', 100)->nullable();
+            $table->string('line_2', 100)->nullable();
+            $table->string('province', 100)->nullable();
             $table->string('country', 100)->nullable();
-            $table->string('city', 100)->nullable();
-            $table->string('municipality', 100)->nullable();
-            $table->string('barangay')->nullable();
-            $table->string('zone')->nullable();
-            $table->string('street')->nullable();
             $table->string('postal_code', 20)->nullable();
             //id related column
             $table->string('driver_license_number')->nullable();
@@ -33,7 +32,7 @@ return new class extends Migration
             $table->string('passport_number')->nullable();
             $table->string('social_security_number')->nullable();
 
-            $table->string('occupation')->nullable();
+
             $table->timestamps();
         });
     }
