@@ -64,12 +64,9 @@ class UserProfileController extends Controller
     /**
      * Store a newly created user profile in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, $user_id)
     {
         \Log::info($request->all());  // Log all incoming data
-
-        // Get user_id from the query string
-        $user_id = $request->query('user_id');
 
         // Validate the input data
         

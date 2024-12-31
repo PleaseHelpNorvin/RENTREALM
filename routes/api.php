@@ -20,9 +20,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{id}', [UserController::class, 'show']);
         Route::post('update/{id}', [UserController::class, 'update']);
     });
+    
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
-        Route::post('store', [UserProfileController::class, 'store']);
+        Route::post('store/{user_id}', [UserProfileController::class, 'store']);
         Route::post('storepicture/{user_id}', [UserProfileController::class, 'storePicture']);
         Route::get('show/{user_id}', [UserProfileController::class, 'showByUserId']);
         Route::post('update/{user_id}', [UserProfileController::class, 'update']);
@@ -30,7 +31,6 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
 
     Route::prefix('maintenance')->group(function () {
-        
 
     });
 });
