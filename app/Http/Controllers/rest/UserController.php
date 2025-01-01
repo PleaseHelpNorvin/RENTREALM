@@ -47,8 +47,20 @@ class UserController extends Controller
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
-            // 'role' => 'nullable|in:' . implode(',', [User::LANDLORD, User::HANDYMAN, User::TENANT]),
         ]);
+
+        // Ensure email is not null before updating
+        if (empty($validated['email'])) {
+            unset($validated['email']);
+        }
+
+        // Ensure password is not null before updating
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        } else {
+            // If a password is provided, hash it before saving
+            $validated['password'] = bcrypt($validated['password']);
+        }
 
         // Update the user fields
         $user->update($validated);
@@ -56,4 +68,5 @@ class UserController extends Controller
         // Return the updated user response
         return $this->successResponse(['user' => $user], 'User updated successfully');
     }
+
 }

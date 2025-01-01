@@ -75,6 +75,7 @@ class UserProfileController extends Controller
             'phone_number' => 'nullable|string|max:255',
             'social_media_links' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
+            //
             'line_1' => 'nullable|string|max:100',
             'line_2' => 'nullable|string|max:100',
             'province' => 'nullable|string|max:255',
@@ -196,44 +197,54 @@ class UserProfileController extends Controller
      */
     public function update(Request $request, $user_id)
     {
-        \Log::info($request->all());  // Log all incoming data
+        \Log::info($request->all()); // Log all incoming data
 
         // Validate the input data
         $validated = $request->validate([
-            // 'profile_picture_url' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Ensure it's an image and under 10MB
             'phone_number' => 'nullable|string|max:255',
             'social_media_links' => 'nullable|string|max:255',
-            'municipality' => 'nullable|string|max:100',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'barangay' => 'nullable|string|max:255',
-            'zone' => 'nullable|string|max:255',
-            'street' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
+            // Address fields
+            'line_1' => 'nullable|string|max:100',
+            'line_2' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:20',
+            // Identification fields
             'driver_license_number' => 'nullable|string|max:255',
             'national_id' => 'nullable|string|max:255',
             'passport_number' => 'nullable|string|max:255',
             'social_security_number' => 'nullable|string|max:255',
-            'occupation' => 'nullable|string|max:255',
         ]);
 
         // Find the profile by user_id
         $profile = UserProfile::where('user_id', $user_id)->first();
 
+        if (!$profile) {
+            return response()->json([
+                'message' => 'Profile not found.',
+            ], 404);
+        }
+
         // Construct the updated address
-        $address = ($request->street ? $request->street . ', ' : '') .
-                ($request->barangay ? $request->barangay . ', ' : '') .
-                ($request->zone ? $request->zone . ', ' : '') .
-                ($request->city ? $request->city . ', ' : '') .
-                ($request->municipality ? $request->municipality . ', ' : '') .
-                ($request->country ? $request->country . ', ' : '') .
-                ($request->postal_code ? $request->postal_code : '');
+        $addressParts = array_filter([
+            $request->line_1,
+            $request->line_2,
+            $request->province,
+            $request->country,
+            $request->postal_code,
+        ]);
+        $address = implode(', ', $addressParts);
 
         // Update the profile with validated data
         $profile->update(array_merge($validated, ['address' => $address]));
 
-        return $this->successResponse(['profile' => $profile], 'Profile updated successfully.');
+        return $this->successResponse(
+            ['profile' => $profile],
+            'Profile updated successfully.'
+        );
     }
+
 
 
     
