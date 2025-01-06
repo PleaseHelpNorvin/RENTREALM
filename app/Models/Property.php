@@ -11,12 +11,10 @@ class Property extends Model
 
     protected $fillable = [
         'name', 
-        'address', 
-        'city', 
-        'municipality', 
-        'barangay', 
-        'zone', 
-        'street',
+        'line_1', 
+        'line_2', 
+        'province', 
+        'country', 
         'postal_code', 
         'type', 
         'status'

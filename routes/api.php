@@ -42,7 +42,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('store', [PropertyController::class, 'store']);
         Route::get('show/{id}',[PropertyController::class, 'show']);
         Route::post('update/{id}', [PropertyController::class, 'update']);
-        Route::post('destroy/{id}', [PropertyController::class, 'destroy']);
+        Route::delete('destroy/{id}', [PropertyController::class, 'destroy']);
     });
     
     Route::prefix('room')->group(function() {

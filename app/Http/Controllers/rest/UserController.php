@@ -41,7 +41,7 @@ class UserController extends Controller
         if (!$user) {
             return $this->notFoundResponse(null, 'User not found');
         }
-
+        
         // Validate incoming data
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',

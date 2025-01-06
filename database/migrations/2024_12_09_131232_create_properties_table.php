@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,15 +13,13 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('address')->nullable();
-            $table->string('municipality')->nullable();
-            $table->string('city')->nullable();
-            $table->string('barangay')->nullable();
-            $table->string('zone')->nullable();
-            $table->string('street')->nullable();
-            $table->string('postal_code')->nullable();
-            $table->enum('type', ['apartment','house','boarding-house'])->default('apartment');
-            $table->enum('status', ['available','rented','full'])->default('available');
+            $table->string('line_1'); // This will now store the full address
+            $table->string('line_2')->nullable(); // Make line_2 nullable in case it's optional
+            $table->string('province')->nullable(); // Make optional if not always provided
+            $table->string('country')->nullable(); // Make optional if not always provided
+            $table->string('postal_code')->nullable(); // Make postal_code nullable
+            $table->enum('type', ['apartment', 'house', 'boarding-house'])->default('apartment');
+            $table->enum('status', ['available', 'rented', 'full'])->default('available');
             $table->timestamps();
         });
     }
