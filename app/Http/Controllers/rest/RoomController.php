@@ -59,8 +59,8 @@ class RoomController extends Controller
         // Validate the request data
         $validatedData = $request->validate([
             'property_id' => 'required|exists:properties,id',
-            'room_picture_url' => 'nullable|array', // Allow array of images
-            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each image
+            'room_picture_url' => 'required|array', // Ensure room_picture_url is an array of images
+            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg', // Validate each image file type
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
@@ -89,19 +89,19 @@ class RoomController extends Controller
             foreach ($request->file('room_picture_url') as $image) {
                 // Store each image and generate its URL
                 $imagePath = $image->store('room_pictures', 'public');
-                $imageUrls[] = asset('storage/' . $imagePath); // Store URL instead of the file path
+                $imageUrls[] = asset('storage/' . $imagePath); // Save the URL
             }
         }
     
         // Convert the image URLs array to JSON format
         $validatedData['room_picture_url'] = json_encode($imageUrls);
     
-        // Create a new room
+        // Create a new room entry with the validated data
         $room = Room::create($validatedData);
     
         return $this->successResponse(['rooms' => $room], 'Room created successfully.');
     }
-        
+            
     // Update an existing room
     public function update(Request $request, $id)
     {
