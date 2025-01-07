@@ -32,7 +32,25 @@ class RoomController extends Controller
             return $this->notFoundResponse(null, 'Room not found.');
         }
 
-        return $this->successResponse($room, 'Room details.');
+        $room->room_picture_url = json_decode($room->room_picture_url);
+
+        return $this->successResponse(['rooms'=>$room], 'Room details.');
+    }
+
+    public function showRoomsByPropertyId($property_id) 
+    {
+        $rooms = Room::where("property_id", $property_id)->get();
+        
+        if(!$rooms) {
+            return $this->notFoundResponse(null, "No rooms in property: $property_id");
+        }
+        $rooms->transform(function($room) {
+            $room->room_picture_url = url('storage/' . $room->room_picture_url);
+            return $room;
+        });
+    
+
+        return $this->successResponse(['rooms' => $rooms], "Rooms in property: $property_id is fetched successfully");
     }
 
     // Store a new room
@@ -41,7 +59,8 @@ class RoomController extends Controller
         // Validate the request data
         $validatedData = $request->validate([
             'property_id' => 'required|exists:properties,id',
-            'room_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate image
+            'room_picture_url' => 'nullable|array', // Allow array of images
+            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each image
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
@@ -52,7 +71,7 @@ class RoomController extends Controller
         // Check if current_occupants is greater than capacity
         if (isset($validatedData['current_occupants']) && $validatedData['current_occupants'] > $validatedData['capacity']) {
             return $this->errorResponse(
-                null, 
+                null,
                 'Current occupants cannot be greater than the room capacity.',
                 400
             );
@@ -64,19 +83,25 @@ class RoomController extends Controller
         // Add the room_code to the validated data
         $validatedData['room_code'] = $room_code;
     
-        // Handle the image upload if a picture is provided
+        // Handle the multiple image uploads if provided
+        $imageUrls = [];
         if ($request->hasFile('room_picture_url')) {
-            $imagePath = $request->file('room_picture_url')->store('room_pictures', 'public');
-            $validatedData['room_picture_url'] = $imagePath;
+            foreach ($request->file('room_picture_url') as $image) {
+                // Store each image and generate its URL
+                $imagePath = $image->store('room_pictures', 'public');
+                $imageUrls[] = asset('storage/' . $imagePath); // Store URL instead of the file path
+            }
         }
+    
+        // Convert the image URLs array to JSON format
+        $validatedData['room_picture_url'] = json_encode($imageUrls);
     
         // Create a new room
         $room = Room::create($validatedData);
     
-        return $this->successResponse(['room' => $room], 'Room created successfully.');
+        return $this->successResponse(['rooms' => $room], 'Room created successfully.');
     }
-    
-
+        
     // Update an existing room
     public function update(Request $request, $id)
     {

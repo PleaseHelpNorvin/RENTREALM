@@ -25,11 +25,11 @@ class PropertyController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'line_1' => 'nullable|string|max:255',
-            'line_2' => 'nullable|string|max:255',
-            'province' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
+            'line_1' => 'required|string|max:255',
+            'line_2' => 'required|string|max:255',
+            'province' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+            'postal_code' => 'required|string|max:20',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
@@ -66,11 +66,10 @@ class PropertyController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'province' => 'required|string|max:255',
+            'line_1' => 'required|string|max:255',
             'line_2' => 'required|string|max:255',
+            'province' => 'required|string|max:255',
             'country' => 'required|string|max:255',
-            'zone' => 'nullable|string|max:255',
-            'street' => 'nullable|string|max:255',
             'postal_code' => 'required|string|max:20',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
@@ -88,12 +87,10 @@ class PropertyController extends Controller
         // Update the property details, including the address
         $property->update([
             'name' => $request->name,
-            'line_1' => $address,  // Update the address field
+            'line_1' => $request->line_1, // Store the full address in line_1
             'line_2' => $request->line_2,
             'province' => $request->province,
             'country' => $request->country,
-            'zone' => $request->zone,
-            'street' => $request->street,
             'postal_code' => $request->postal_code,
             'type' => $request->type,
             'status' => $request->status,

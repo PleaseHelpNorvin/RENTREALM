@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('line_1'); // This will now store the full address
+            $table->string('line_1')->nullable(); // This will now store the full address
             $table->string('line_2')->nullable(); // Make line_2 nullable in case it's optional
             $table->string('province')->nullable(); // Make optional if not always provided
             $table->string('country')->nullable(); // Make optional if not always provided

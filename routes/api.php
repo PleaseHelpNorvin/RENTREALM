@@ -48,6 +48,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
     Route::prefix('room')->group(function() {
         Route::get('index', [RoomController::class, 'index']);
         Route::post('store', [RoomController::class, 'store']);
+        Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
         Route::get('show/{id}',[RoomController::class, 'show']);
         Route::post('update/{id}', [RoomController::class, 'update']);
         Route::post('destroy/{id}', [RoomController::class, 'destroy']);
