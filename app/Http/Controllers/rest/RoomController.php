@@ -105,48 +105,59 @@ class RoomController extends Controller
     // Update an existing room
     public function update(Request $request, $id)
     {
-        $room = Room::find($id);
-
-        if (!$room) {
-            return $this->notFoundResponse(null, 'Room not found.');
-        }
-
         // Validate the request data
         $validatedData = $request->validate([
-            'property_id' => 'exists:properties,id',
-            'room_picture_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate image
+            'property_id' => 'required|exists:properties,id',
+            'room_picture_url' => 'nullable|array', // Ensure room_picture_url is an array of images
+            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|nullable', // Validate each image file type
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
             'status' => 'required|in:available,rented,under maintenance,full',
         ]);
-
+    
         // Check if current_occupants is greater than capacity
         if (isset($validatedData['current_occupants']) && $validatedData['current_occupants'] > $validatedData['capacity']) {
             return $this->errorResponse(
-                null, 
+                null,
                 'Current occupants cannot be greater than the room capacity.',
                 400
             );
         }
-
-        // Handle the image upload if a picture is provided
-        if ($request->hasFile('room_picture_url')) {
-            // Delete the old image if it exists
-            if ($room->room_picture_url && file_exists(storage_path('app/public/' . $room->room_picture_url))) {
-                unlink(storage_path('app/public/' . $room->room_picture_url));
+    
+        // Generate the room_code automatically
+        $room_code = 'room-' . Str::random(6) . rand(100, 999);
+    
+        // Add the room_code to the validated data
+        $validatedData['room_code'] = $room_code;
+    
+        // Handle the multiple image uploads if provided
+        if ($request->hasFile('room_picture_url') && count($request->file('room_picture_url')) > 0) {
+            $imageUrls = [];
+            foreach ($request->file('room_picture_url') as $image) {
+                // Store each image and generate its URL
+                $imagePath = $image->store('room_pictures', 'public');
+                $imageUrls[] = asset('storage/' . $imagePath); // Save the URL
             }
-
-            // Store the new image
-            $imagePath = $request->file('room_picture_url')->store('room_pictures', 'public');
-            $validatedData['room_picture_url'] = $imagePath;
+            // Convert the image URLs array to JSON format
+            $validatedData['room_picture_url'] = json_encode($imageUrls);
+        } else {
+            // If no new images are selected, retain the current room picture URLs
+            $room = Room::findOrFail($id);
+            if ($room->room_picture_url) {
+                // Keep the old room picture URLs if none were selected
+                $validatedData['room_picture_url'] = $room->room_picture_url;
+            }
         }
-
-        // Update the room
+    
+        // Fetch the room instance by its ID
+        $room = Room::findOrFail($id);
+    
+        // Update the room with the validated data
         $room->update($validatedData);
-
-        return $this->successResponse($room, 'Room updated successfully.');
+    
+        return $this->successResponse(['rooms' => $room], 'Room updated successfully.');
     }
 
     // Delete a room
