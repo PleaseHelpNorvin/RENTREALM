@@ -228,11 +228,11 @@ class UserProfileController extends Controller
 
         // Construct the updated address
         $addressParts = array_filter([
-            $request->line_1,
-            $request->line_2,
-            $request->province,
-            $request->country,
-            $request->postal_code,
+            $request->line_1 ?? $profile->line_1,  // Use existing value if not provided
+            $request->line_2 ?? $profile->line_2,
+            $request->province ?? $profile->province,
+            $request->country ?? $profile->country,
+            $request->postal_code ?? $profile->postal_code,
         ]);
         $address = implode(', ', $addressParts);
 
