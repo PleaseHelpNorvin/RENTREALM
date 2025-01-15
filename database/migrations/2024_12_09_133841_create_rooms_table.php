@@ -20,7 +20,9 @@ return new class extends Migration
             $table->integer('capacity');
             $table->integer('current_occupants')->nullable();
             $table->integer('min_lease');
+            $table->integer('size'); // ex: 12ft x 12ft 
             $table->enum('status', ['available','rented','under maintenance','full'])->default('available');
+            $table->enum('unit type', ['studio unit','triplex unit','alcove','Loft unit', 'shared unit', 'micro-unit'])->default('available');
             $table->timestamps();
         });
     }

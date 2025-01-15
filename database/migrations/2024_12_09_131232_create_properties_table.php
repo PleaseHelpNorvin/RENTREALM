@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('province')->nullable(); // Make optional if not always provided
             $table->string('country')->nullable(); // Make optional if not always provided
             $table->string('postal_code')->nullable(); // Make postal_code nullable
+            $table->enum('allowed', ['boys only', 'girls only'])->default('boys only');
             $table->enum('type', ['apartment', 'house', 'boarding-house'])->default('apartment');
             $table->enum('status', ['available', 'rented', 'full'])->default('available');
             $table->timestamps();
