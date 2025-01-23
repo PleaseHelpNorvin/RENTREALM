@@ -11,11 +11,13 @@ class Property extends Model
 
     protected $fillable = [
         'name', 
+        'property_picture_url',
         'line_1', 
         'line_2', 
         'province', 
         'country', 
         'postal_code', 
+        'gender_allowed',
         'type', 
         'status'
     ];

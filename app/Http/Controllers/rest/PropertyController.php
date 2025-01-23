@@ -23,31 +23,49 @@ class PropertyController extends Controller
     // Store a new property
     public function store(Request $request)
     {
-        $request->validate([
+        // Validate input
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
+            'property_picture_url' => 'required|array', // Ensure it's an array
+            'property_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each file in the array
             'line_1' => 'required|string|max:255',
             'line_2' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
+            'gender_allowed' => 'required|string|max:20',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
-        
-        // Store the property with the constructed address
+    
+        $imageUrls = [];
+        // Process images
+        if ($request->hasFile('property_picture_url')) {
+            foreach ($request->file('property_picture_url') as $image) {
+                $imagePath = $image->store('property_pictures', 'public');
+                $imageUrls[] = asset('storage/' . $imagePath);
+            }
+        }
+    
+        // Add processed image URLs to validated data
+        $validatedData['property_picture_url'] = json_encode($imageUrls);
+    
+        // Create the property
         $property = Property::create([
-            'name' => $request->name,
-            'line_1' => $request->line_1, // Store the full address in line_1
-            'line_2' => $request->line_2,
-            'province' => $request->province,
-            'country' => $request->country,
-            'postal_code' => $request->postal_code,
-            'type' => $request->type,
-            'status' => $request->status,
+            'name' => $validatedData['name'],
+            'property_picture_url' => $validatedData['property_picture_url'],
+            'line_1' => $validatedData['line_1'],
+            'line_2' => $validatedData['line_2'],
+            'province' => $validatedData['province'],
+            'country' => $validatedData['country'],
+            'postal_code' => $validatedData['postal_code'],
+            'type' => $validatedData['type'],
+            'status' => $validatedData['status'],
         ]);
-
+    
         return $this->successResponse(['property' => $property], 'Property created successfully.', 201);
     }
+    
 
     // Show a single property
     public function show($id)

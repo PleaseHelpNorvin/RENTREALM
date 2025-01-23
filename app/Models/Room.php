@@ -14,11 +14,16 @@ class Room extends Model
         'property_id',
         'room_code',
         'room_picture_url',
+        'description',
+        'room_details',
+        'category',
         'rent_price',
         'capacity',
         'current_occupants',
         'min_lease',
+        'size',
         'status',
+        'unit_type'
     ];
 
     protected $casts = [

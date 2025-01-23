@@ -61,11 +61,16 @@ class RoomController extends Controller
             'property_id' => 'required|exists:properties,id',
             'room_picture_url' => 'required|array', // Ensure room_picture_url is an array of images
             'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg', // Validate each image file type
+            'description' => 'required|string|max:255',
+            'room_details' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
+            'size' => 'required|string|max:20',
             'status' => 'required|in:available,rented,under maintenance,full',
+            'unit_type' => 'required|in:studio unit, triplex unit, alcove, Loft unit, shared unit, micro-unit',
         ]);
     
         // Check if current_occupants is greater than capacity
@@ -110,11 +115,16 @@ class RoomController extends Controller
             'property_id' => 'required|exists:properties,id',
             'room_picture_url' => 'nullable|array', // Ensure room_picture_url is an array of images
             'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|nullable', // Validate each image file type
+            // 'description'
+            // 'room_details'
+            // 'category'
             'rent_price' => 'nullable|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
+            // 'size'
             'status' => 'required|in:available,rented,under maintenance,full',
+            // 'unit_type'
         ]);
     
         // Check if current_occupants is greater than capacity
