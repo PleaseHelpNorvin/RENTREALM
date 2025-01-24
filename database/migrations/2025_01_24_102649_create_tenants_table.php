@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             // Foreign keys
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
-            $table->foreignId('property_id')->constrained('properties')->onDelete('cascade');
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
             $table->foreignId('rental_agreement_id')->constrained('rental_agreements')->onDelete('restrict');
             // Leasing info
@@ -37,7 +35,6 @@ return new class extends Migration
             $table->boolean('has_tv')->default(false);
             $table->timestamps();
         });
-
     }
 
     /**

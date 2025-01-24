@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('deposit', 10, 2)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
+
         });
     }
 
