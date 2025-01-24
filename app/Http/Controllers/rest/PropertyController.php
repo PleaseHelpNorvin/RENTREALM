@@ -84,17 +84,20 @@ class PropertyController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'property_picture_url' => 'required|array', // Ensure it's an array
+            'property_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each file in the array
             'line_1' => 'required|string|max:255',
             'line_2' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
+            'gender_allowed' => 'required|string|max:20',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
         
         $property = Property::find($id);
-    
+        
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
         }

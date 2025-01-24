@@ -12,17 +12,14 @@ class Property extends Model
     protected $fillable = [
         'name', 
         'property_picture_url',
-        'line_1', 
-        'line_2', 
-        'province', 
-        'country', 
-        'postal_code', 
         'gender_allowed',
         'type', 
         'status'
     ];
 
     protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'type' => 'string',
         'status' => 'string',
     ];
@@ -30,5 +27,10 @@ class Property extends Model
     public function rooms()
     {
         return $this->hasMany(Room::class);
+    }
+
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
     }
 }   

@@ -12,8 +12,8 @@ class Room extends Model
     use HasFactory;
     protected $fillable = [
         'property_id',
-        'room_code',
         'room_picture_url',
+        'room_code',
         'description',
         'room_details',
         'category',
@@ -35,6 +35,7 @@ class Room extends Model
     {
         return $this->belongsTo(Property::class);
     }
+
 
     protected static function booted()
     {

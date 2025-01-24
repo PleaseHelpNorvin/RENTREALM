@@ -19,13 +19,6 @@ return new class extends Migration
             $table->string('social_media_links')->nullable();
             $table->string('occupation')->nullable();
 
-            //address related column
-            $table->text('address')->nullable();
-            $table->string('line_1', 100)->nullable();
-            $table->string('line_2', 100)->nullable();
-            $table->string('province', 100)->nullable();
-            $table->string('country', 100)->nullable();
-            $table->string('postal_code', 20)->nullable();
             //id related column
             $table->string('driver_license_number')->nullable();
             $table->string('national_id')->nullable();
@@ -35,6 +28,7 @@ return new class extends Migration
 
             $table->timestamps();
         });
+
     }
 
     /**

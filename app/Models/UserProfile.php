@@ -14,13 +14,7 @@ class UserProfile extends Model
         'profile_picture_url',
         'phone_number',
         'social_media_links',
-        //address part
-        'address',
-        'line_1',
-        'line_2',
-        'province',
-        'country',
-        'postal_code',
+ 
         //identification part
         'driver_license_number',
         'national_id',
@@ -38,5 +32,10 @@ class UserProfile extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
     }
 }
