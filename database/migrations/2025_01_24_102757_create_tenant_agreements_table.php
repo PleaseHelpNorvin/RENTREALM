@@ -19,9 +19,8 @@ return new class extends Migration
             $table->date('agreement_end_date')->nullable();
             $table->decimal('rent_price', 10, 2);
             $table->decimal('deposit', 10, 2)->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['active', 'inactive'])->default('active'); // very crucial Needed to fetch the active status if there is no active agreements for that tenant then on my mobile it will redirect to renting forms to make an rent 
             $table->timestamps();
-
         });
     }
 
