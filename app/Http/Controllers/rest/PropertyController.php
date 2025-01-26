@@ -11,18 +11,24 @@ class PropertyController extends Controller
     // Show all properties
     public function index()
     {
-        $properties = Property::all();
-
+        // Eager-load the 'address' relationship with properties
+        $properties = Property::with('address')->get();
+    
         if ($properties->isEmpty()) {
             return $this->notFoundResponse(null, 'No properties found.');
         }
-
-        return $this->successResponse(['properties' => $properties], 'Properties Fetched Successfully', 201);
+    
+        return $this->successResponse(
+            ['properties' => $properties],
+            'Properties Fetched Successfully',
+            201
+        );
     }
 
     // Store a new property
     public function store(Request $request)
     {
+        \Log::info($request->all());
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -33,7 +39,8 @@ class PropertyController extends Controller
             'province' => 'required|string|max:255',
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
-            'gender_allowed' => 'required|string|max:20',
+            'gender_allowed' => 'required|in:boys-only,girls-only',
+            'pets_allowed' => 'required|boolean',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
@@ -54,13 +61,18 @@ class PropertyController extends Controller
         $property = Property::create([
             'name' => $validatedData['name'],
             'property_picture_url' => $validatedData['property_picture_url'],
+            'gender_allowed' => $validatedData['gender_allowed'],
+            'pets_allowed' => $validatedData['pets_allowed'],
+            'type' => $validatedData['type'],
+            'status' => $validatedData['status'],
+        ]);
+
+        $property->address()->create([
             'line_1' => $validatedData['line_1'],
             'line_2' => $validatedData['line_2'],
             'province' => $validatedData['province'],
             'country' => $validatedData['country'],
             'postal_code' => $validatedData['postal_code'],
-            'type' => $validatedData['type'],
-            'status' => $validatedData['status'],
         ]);
     
         return $this->successResponse(['property' => $property], 'Property created successfully.', 201);
@@ -70,7 +82,7 @@ class PropertyController extends Controller
     // Show a single property
     public function show($id)
     {
-        $property = Property::find($id);
+        $property = Property::find($id)->with('address')->first();
 
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
@@ -82,44 +94,64 @@ class PropertyController extends Controller
     // Update an existing property
     public function update(Request $request, $id)
     {
-        $request->validate([
+        \Log::info($request->all());
+        // Validate input
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'property_picture_url' => 'required|array', // Ensure it's an array
             'property_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each file in the array
             'line_1' => 'required|string|max:255',
-            'line_2' => 'required|string|max:255',
+            'line_2' => 'nullable|string|max:255',
             'province' => 'required|string|max:255',
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
-            'gender_allowed' => 'required|string|max:20',
+            'gender_allowed' => 'required|in:boys-only,girls-only',
+            'pets_allowed' => 'required|boolean',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
-        
+    
+        // Find the property by ID
         $property = Property::find($id);
-        
+    
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
         }
-
-        // Construct the full address before updating
-        $address = $request->street . ', ' . $request->country . ', ' . ($request->zone ? $request->zone . ', ' : '') . $request->province . ', ' . $request->line_2 . ', ' . $request->postal_code;
     
-        // Update the property details, including the address
+        $imageUrls = [];
+        if ($request->hasFile('property_picture_url')) {
+            foreach ($request->file('property_picture_url') as $image) {
+                $imagePath = $image->store('property_pictures', 'public');
+                $imageUrls[] = asset('storage/' . $imagePath);
+            }
+            $validatedData['property_picture_url'] = json_encode($imageUrls);
+        } else {
+            // Keep the existing property picture URLs if no new files are uploaded
+            $validatedData['property_picture_url'] = $property->property_picture_url;
+        }
+    
+        // Update the property fields
         $property->update([
-            'name' => $request->name,
-            'line_1' => $request->line_1, // Store the full address in line_1
-            'line_2' => $request->line_2,
-            'province' => $request->province,
-            'country' => $request->country,
-            'postal_code' => $request->postal_code,
-            'type' => $request->type,
-            'status' => $request->status,
+            'name' => $validatedData['name'],
+            'property_picture_url' => $validatedData['property_picture_url'],
+            'gender_allowed' => $validatedData['gender_allowed'],
+            'pets_allowed' => $validatedData['pets_allowed'],
+            'type' => $validatedData['type'],
+            'status' => $validatedData['status'],
+        ]);
+    
+        // Update the associated address
+        $property->address()->update([
+            'line_1' => $validatedData['line_1'],
+            'line_2' => $validatedData['line_2'],
+            'province' => $validatedData['province'],
+            'country' => $validatedData['country'],
+            'postal_code' => $validatedData['postal_code'],
         ]);
     
         return $this->successResponse($property, 'Property updated successfully.');
     }
-
+    
     // Delete a property
     public function destroy($id)
     {
@@ -129,6 +161,10 @@ class PropertyController extends Controller
         // If the property does not exist, return a not found response
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
+        }
+
+        if ($property->address) {
+            $property->address()->delete();
         }
 
         // Delete all related rooms manually (if not using cascading delete)

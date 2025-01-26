@@ -13,6 +13,7 @@ class Property extends Model
         'name', 
         'property_picture_url',
         'gender_allowed',
+        'pets_allowed',
         'type', 
         'status'
     ];
