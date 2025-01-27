@@ -98,7 +98,7 @@ class PropertyController extends Controller
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'property_picture_url' => 'required|array', // Ensure it's an array
+            'property_picture_url' => 'nullable|array', // Ensure it's an array
             'property_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate each file in the array
             'line_1' => 'required|string|max:255',
             'line_2' => 'nullable|string|max:255',
