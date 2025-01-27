@@ -69,8 +69,8 @@ class RoomController extends Controller
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
             'size' => 'required|string|max:20',
-            'status' => 'required|in:available,rented,under maintenance,full',
-            'unit_type' => 'required|in:studio unit, triplex unit, alcove, Loft unit, shared unit, micro-unit',
+            'status' => 'required|in:available,rented,under_maintenance,full',
+            'unit_type' => 'required|in:studio_unit,triplex_unit,alcove,loft_unit,shared_unit,micro_unit',
         ]);
     
         // Check if current_occupants is greater than capacity
