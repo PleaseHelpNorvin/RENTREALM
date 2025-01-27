@@ -106,7 +106,7 @@ class PropertyController extends Controller
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'gender_allowed' => 'required|in:boys-only,girls-only',
-            'pets_allowed' => 'required|boolean',
+            'pets_allowed' => 'required|in:0,1,true,false',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
