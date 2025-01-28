@@ -19,8 +19,8 @@ class Tenant extends Model
         'deposit',
         'payment_status',
         'status',
-        'emergy_contact_name',
-        'emergy_contact_phone',
+        'emergency_contact_name',
+        'emergency_contact_phone',
         'has_pets',
         'wifi_enabled',
         'has_laundry_access',
@@ -36,5 +36,15 @@ class Tenant extends Model
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function rentalAgreement()
+    {
+        return $this->belongsTo(RentalAgreement::class, 'rental_agreement_id');
+    }
+
+    public function userProfile()
+    {
+        return $this->HasOne(userProfile::class);
     }
 }

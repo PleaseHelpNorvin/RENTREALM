@@ -38,4 +38,9 @@ class UserProfile extends Model
     {
         return $this->morphOne(Address::class, 'addressable');
     }
+
+    public function tenant()
+    {
+        return $this->BelongsTo(Tenant::class);
+    }
 }

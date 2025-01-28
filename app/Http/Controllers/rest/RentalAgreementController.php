@@ -21,7 +21,7 @@ class RentalAgreementController extends Controller
             return $this->notFoundResponse(null, 'no rental agreement found');
         }
 
-        return $this-> successResponse (['rental_agreements' => $rentalAgreement], 'Rental Agreements fetched Successfully');
+        return $this-> successResponse(['rental_agreements' => $rentalAgreement], 'Rental Agreements fetched Successfully');
     }
 
     public function store(Request $request)

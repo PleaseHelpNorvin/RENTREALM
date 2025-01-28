@@ -8,6 +8,8 @@ use App\Http\Controllers\rest\UserController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\RentalAgreementController;
+use App\Http\Controllers\rest\TenantController;
+
 
 
 
@@ -36,6 +38,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
+    Route::prefix('tenant')->group(function() {
+        Route::get('index', [TenantController::class, 'index']);
+        Route::post('store', [TenantController::class, 'store']);
+    });
 
     Route::prefix('maintenance')->group(function () {
 
