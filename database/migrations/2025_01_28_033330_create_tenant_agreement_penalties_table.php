@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('description')->nullable(); // Optional description of penalty
             $table->date('penalty_date')->nullable(); // Optional date of penalty imposition
             $table->timestamps();
-
         });
     }
 

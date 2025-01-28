@@ -25,13 +25,18 @@ class Property extends Model
         'status' => 'string',
     ];
 
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
+    }
+
     public function rooms()
     {
         return $this->hasMany(Room::class);
     }
 
-    public function address()
+    public function rentalAgreements()
     {
-        return $this->morphOne(Address::class, 'addressable');
+        return $this->hasManyThrough(RentalAgreement::class, Room::class);
     }
 }   
