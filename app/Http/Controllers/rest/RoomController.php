@@ -64,7 +64,7 @@ class RoomController extends Controller
             'description' => 'required|string|max:255',
             'room_details' => 'required|string|max:255',
             'category' => 'required|string|max:255',
-            'rent_price' => 'nullable|numeric',
+            'rent_price' => 'required|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
@@ -114,17 +114,17 @@ class RoomController extends Controller
         $validatedData = $request->validate([
             'property_id' => 'required|exists:properties,id',
             'room_picture_url' => 'nullable|array', // Ensure room_picture_url is an array of images
-            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg|nullable', // Validate each image file type
-            // 'description'
-            // 'room_details'
-            // 'category'
-            'rent_price' => 'nullable|numeric',
+            'room_picture_url.*' => 'image|mimes:jpeg,png,jpg,gif,svg', // Validate each image file type
+            'description' => 'required|string|max:255',
+            'room_details' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'rent_price' => 'required|numeric',
             'capacity' => 'required|integer',
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
-            // 'size'
-            'status' => 'required|in:available,rented,under maintenance,full',
-            // 'unit_type'
+            'size' => 'required|string|max:20',
+            'status' => 'required|in:available,rented,under_maintenance,full',
+            'unit_type' => 'required|in:studio_unit,triplex_unit,alcove,loft_unit,shared_unit,micro_unit',
         ]);
     
         // Check if current_occupants is greater than capacity
@@ -152,6 +152,7 @@ class RoomController extends Controller
             }
             // Convert the image URLs array to JSON format
             $validatedData['room_picture_url'] = json_encode($imageUrls);
+
         } else {
             // If no new images are selected, retain the current room picture URLs
             $room = Room::findOrFail($id);
