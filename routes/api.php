@@ -7,6 +7,7 @@ use App\Http\Controllers\rest\RoomController;
 use App\Http\Controllers\rest\UserController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\UserProfileController;
+use App\Http\Controllers\rest\RentalAgreementController;
 
 
 
@@ -27,6 +28,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('storepicture/{user_id}', [UserProfileController::class, 'storePicture']);
         Route::get('show/{user_id}', [UserProfileController::class, 'showByUserId']);
         Route::post('update/{user_id}', [UserProfileController::class, 'update']);
+    });
+
+    Route::prefix('rental_agreement')->group(function(){
+        Route::get('index', [RentalAgreementController::class, 'index']);
+        Route::post('store', [RentalAgreementController::class, 'store']);
+        Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
 
@@ -54,6 +61,13 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::delete('destroy/{id}', [RoomController::class, 'destroy']);
     });
 
+
+    Route::prefix('rental_agreement')->group(function(){
+        Route::get('index', [RentalAgreementController::class, 'index']);
+        Route::post('store', [RentalAgareementController::class, 'store']);
+        Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
+        Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
+    });
     // Route::prefix('profile')->group(function () {
     //     Route::post('show/{id}', [UserProfileController::class, 'show']);
     // });

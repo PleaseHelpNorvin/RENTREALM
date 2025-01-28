@@ -13,6 +13,7 @@ class RentalAgreement extends Model
     protected $fillable = [
         'property_id',
         'room_id',
+        'agreement_code',
         'rent_start_date',
         'rent_end_date',
         'rent_price',
@@ -30,7 +31,10 @@ class RentalAgreement extends Model
         return $this->belongsTo(Property::class);
     }
 
-    
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 }
 
 

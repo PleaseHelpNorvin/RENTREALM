@@ -7,23 +7,27 @@ use Illuminate\Http\Request;
 
 class TenantController extends Controller
 {
-    //
     public function index()
     {
-
+        
     }
 
-    public function show(Request $request, $id)
+    public function store(Request $request)
+    {
+        
+    }
+
+    public function show($id, Request $request)
+    {
+        
+    }
+
+    public function update($id, Request $request)
     {
 
     }
 
-    public function update(Request $request, $id)
-    {
-
-    }
-
-    public function delete(Request $request, $id)
+    public function destroy($id, Request $request)
     {
         
     }
