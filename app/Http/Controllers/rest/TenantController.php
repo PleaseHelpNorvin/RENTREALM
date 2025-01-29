@@ -47,17 +47,24 @@ class TenantController extends Controller
         return $this->successResponse(['tenant' => $tenant], 'Tenant Added Successfully');
     }
 
-    public function show($id, Request $request)
+    public function show($tenant_id, Request $request)
     {
-        
+        $tenant = Tenant::findOrFail($tenant_id);
+
+        if(!$tenant)
+        {
+            return $this->notFoundResponse(null,"Tenant $tenant_id notFound");
+        }
+
+        return $this->successResponse(['tenant' => $tenant], 'Tenant Found Successfully');
     }
 
-    public function update($id, Request $request)
+    public function update($tenant_id, Request $request)
     {
 
     }
 
-    public function destroy($id, Request $request)
+    public function destroy($tenant_id, Request $request)
     {
         
     }

@@ -41,6 +41,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('tenant')->group(function() {
         Route::get('index', [TenantController::class, 'index']);
         Route::post('store', [TenantController::class, 'store']);
+        Route::get('show/{tenant_id}', [TenantController::class, 'show']);
     });
 
     Route::prefix('maintenance')->group(function () {

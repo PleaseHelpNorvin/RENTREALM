@@ -81,7 +81,7 @@ class RentalAgreementController extends Controller
         
         $agreementCode = $rentalAgreement->agreement_code;
         
-        return $this->successresponse(['rental_agreement' => $rentalAgreement], "Rental Agreement $agreementCode fetched Successfully");
+        return $this->successesponse(['rental_agreement' => $rentalAgreement], "Rental Agreement $agreementCode fetched Successfully");
     }
 
     public function update($rentalagreement_id, Request $request)
