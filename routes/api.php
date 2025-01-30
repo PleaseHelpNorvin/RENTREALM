@@ -71,7 +71,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
-        Route::post('store', [RentalAgareementController::class, 'store']);
+        Route::post('store', [RentalAgreementController::class, 'store']);
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
