@@ -59,6 +59,17 @@ class TenantController extends Controller
         return $this->successResponse(['tenant' => $tenant], 'Tenant Found Successfully');
     }
 
+    public function showByProfileId($profile_id)
+    {
+        $tenantByProfileId = Tenant::where('profile_id', $profile_id)->first();
+
+        if (!$tenantByProfileId) {
+            return $this->notFoundResponse(null, "Tenant $profile_id is not found");
+        }
+
+        return $this->successResponse(['tenant' => $tenantByProfileId], "Tenant $profile_id Found Successfully");
+    }
+
     public function update($tenant_id, Request $request)
     {
 
@@ -66,6 +77,27 @@ class TenantController extends Controller
 
     public function destroy($tenant_id, Request $request)
     {
-        
+        $tenant = Tenant::find($tenant_id);
+
+        if (!$tenant) {
+            return $this->notFoundResponse(null, "Tenant with tenant_id $tenant_id not found");
+        }
+
+        $tenant->delete();
+        return $this->successResponse(null, "Tenant with tenant_id $tenant_id deleted successfully ");
+    }
+
+
+    public function destroyByProfileId($profile_id)
+    {
+        $tenantByProfileId = Tenant::where('profile_id', $profile_id)->first();
+
+        if (!$tenantByProfileId) {
+            return $this->notFoundResponse(null, "Tenant with profile_id $profile_id not found");
+        }
+
+        $tenantByProfileId->delete(); // Delete the tenant
+
+        return $this->successResponse(null, "Tenant with profile_id $profile_id deleted successfully");
     }
 }
