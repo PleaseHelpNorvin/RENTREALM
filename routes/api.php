@@ -38,6 +38,16 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
+    Route::prefix('property')->group(function () {
+        Route::get('index', [PropertyController::class, 'index']);
+
+    });
+
+    Route::prefix('room')->group(function () {
+        Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+    });
+
+
     Route::prefix('tenant')->group(function() {
         Route::get('index', [TenantController::class, 'index']);
         Route::post('store', [TenantController::class, 'store']);
@@ -70,7 +80,6 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [RoomController::class, 'update']);
         Route::delete('destroy/{id}', [RoomController::class, 'destroy']);
     });
-
 
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
