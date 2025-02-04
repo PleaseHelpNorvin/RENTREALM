@@ -21,7 +21,7 @@ class PropertyController extends Controller
         return $this->successResponse(
             ['properties' => $properties],
             'Properties Fetched Successfully',
-            201
+            200
         );
     }
 
