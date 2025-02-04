@@ -98,7 +98,7 @@ class RentalAgreementController extends Controller
 
         $rentalAgreement = RentalAgreement::findOrFail($rentalagreement_id);
         if(!$rentalAgreement)
-        {
+        {   
             return $this->notFoundResponse(null, 'Rental Agreement notFOund');
         }
 
@@ -109,6 +109,13 @@ class RentalAgreementController extends Controller
 
         return $this->successResponse(['rentalAgreement' => $rentalAgreement], "Rental Agreement $agreementCode Updated Successfully");
     }
+
+    // Public function showByRoomId($room_id, Request $request)
+    // {
+        
+    // }
+
+
 
     public function destroy($rentalagreement_id, Request $request)
     {
