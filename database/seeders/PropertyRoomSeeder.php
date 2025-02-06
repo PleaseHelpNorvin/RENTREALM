@@ -9,6 +9,8 @@ use Faker\Factory as Faker;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
+$faker = Faker::create('en_PH');
+
 class PropertyRoomSeeder extends Seeder
 {
     /**
@@ -41,24 +43,46 @@ class PropertyRoomSeeder extends Seeder
             ]);
 
             // Create an address for each property
+            // $property->address()->create([
+            //     'line_1' => $faker->streetAddress,
+            //     'line_2' => $faker->secondaryAddress,
+            //     'province' => 'cebu',
+            //     'country' => 'Philippines',
+            //     'postal_code' => $faker->postcode,
+            // ]);
             $property->address()->create([
-                'line_1' => $faker->streetAddress,
+                'line_1' => $faker->randomElement([
+                    '1234 Mango St.', '5678 Lakeside Rd.', '24 Riverside Ave.',
+                    '1012 Biliran St.', '1123 V. Rama Ave.', '75 Mactan Beach Rd.',
+                    '8 Banilad Ave.', '3 Queen’s Garden St.', '920 C. Padilla St.',
+                    '15 Subangdaku St.'
+                ]),
                 'line_2' => $faker->secondaryAddress,
-                'province' => $faker->state,
-                'country' => $faker->country,
-                'postal_code' => $faker->postcode,
+                'province' => 'Cebu',
+                'country' => 'Philippines',
+                'postal_code' => $this->getPostalCodeForAddress($faker),
             ]);
+            
 
-            // Create at least 5 rooms for each property
             for ($j = 0; $j < 5; $j++) {
                 $imageUrls = [
                     $faker->randomElement($roomImages),
                     $faker->randomElement($roomImages),
                     $faker->randomElement($roomImages)
                 ];
-
+            
                 $capacity = $faker->numberBetween(1, 5);
-
+                $currentOccupants = $faker->numberBetween(0, $capacity);
+            
+                if ($currentOccupants == 0) {
+                    $status = 'available';  // If no occupants, status is available
+                } elseif ($currentOccupants == $capacity) {
+                    $status = 'full';  // If the room is full, status is full
+                } else {
+                    $status = $faker->randomElement(['rented', 'under_maintenance']);
+                    // For partially occupied rooms, set status to rented
+                }
+            
                 Room::create([
                     'property_id' => $property->id,
                     'room_picture_url' => json_encode($imageUrls),
@@ -68,15 +92,41 @@ class PropertyRoomSeeder extends Seeder
                     'category' => $faker->word,
                     'rent_price' => $faker->randomFloat(2, 5000, 20000),
                     'capacity' => $capacity,
-                    'current_occupants' => $faker->numberBetween(0, $capacity),
+                    'current_occupants' => $currentOccupants,
                     'min_lease' => $faker->numberBetween(3, 12),
                     'size' => $faker->randomElement(['10ft x 10ft', '12ft x 15ft', '15ft x 20ft']),
-                    'status' => $faker->randomElement(['available', 'rented', 'under_maintenance', 'full']),
+                    'status' => $status,  // Use the status that was assigned above
                     'unit_type' => $faker->randomElement(['studio_unit', 'triplex_unit', 'alcove', 'loft_unit', 'shared_unit', 'micro_unit']),
                 ]);
             }
         }
     }
+
+    private function getPostalCodeForAddress($faker)
+    {
+        $postalCodes = [
+            '1234 Mango St.' => '6000',
+            '5678 Lakeside Rd.' => '6015',
+            '24 Riverside Ave.' => '6014',
+            '1012 Biliran St.' => '6000',
+            '1123 V. Rama Ave.' => '6000',
+            '75 Mactan Beach Rd.' => '6015',
+            '8 Banilad Ave.' => '6000',
+            '3 Queen’s Garden St.' => '6015',
+            '920 C. Padilla St.' => '6000',
+            '15 Subangdaku St.' => '6014'
+        ];
+    
+        $address = $faker->randomElement([
+            '1234 Mango St.', '5678 Lakeside Rd.', '24 Riverside Ave.',
+            '1012 Biliran St.', '1123 V. Rama Ave.', '75 Mactan Beach Rd.',
+            '8 Banilad Ave.', '3 Queen’s Garden St.', '920 C. Padilla St.',
+            '15 Subangdaku St.'
+        ]);
+    
+        return $postalCodes[$address];
+    }
+    
 
     /**
      * Ensure the folder exists.
