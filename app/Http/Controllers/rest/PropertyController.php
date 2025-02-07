@@ -29,6 +29,7 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
         \Log::info($request->all());
+    
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -46,15 +47,18 @@ class PropertyController extends Controller
         ]);
     
         $imageUrls = [];
+        
         // Process images
         if ($request->hasFile('property_picture_url')) {
             foreach ($request->file('property_picture_url') as $image) {
+                // Store image and generate URL
                 $imagePath = $image->store('property_pictures', 'public');
                 $imageUrls[] = asset('storage/' . $imagePath);
             }
         }
     
         // Add processed image URLs to validated data
+        // JSON encode the URLs array before saving
         $validatedData['property_picture_url'] = json_encode($imageUrls);
     
         // Create the property
@@ -66,7 +70,8 @@ class PropertyController extends Controller
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
-
+    
+        // Create the address for the property
         $property->address()->create([
             'line_1' => $validatedData['line_1'],
             'line_2' => $validatedData['line_2'],
