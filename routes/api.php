@@ -45,6 +45,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('room')->group(function () {
         Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+        Route::get('show/{id}',[RoomController::class, 'show']);
     });
 
     // Route::prefix('rental_agreement')->group(function () {
