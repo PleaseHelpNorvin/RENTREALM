@@ -9,6 +9,8 @@ use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\TenantController;
+use App\Http\Controllers\rest\AddressController;
+
 
 
 
@@ -92,9 +94,9 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
-    // Route::prefix('profile')->group(function () {
-    //     Route::post('show/{id}', [UserProfileController::class, 'show']);
-    // });
+    Route::prefix('address')->group(function () {
+        Route::get('index', [AddressController::class, 'index']);
+    });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

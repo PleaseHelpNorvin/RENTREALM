@@ -109,7 +109,10 @@ class UserProfileController extends Controller
                 'social_security_number' => $validated['social_security_number'] ?? null,
             ]
         );
-    
+        
+        $fullAddress = "{$validated['line_1']}, {$validated['line_2']}, {$validated['province']}, {$validated['country']}, {$validated['postal_code']}";
+        $coordinates = Address::getCoordinates($fullAddress);
+
         // Associate the address with the profile using polymorphic relationship
         $profile->address()->create([
             'line_1' => $validated['line_1'] ?? null,
@@ -117,6 +120,8 @@ class UserProfileController extends Controller
             'province' => $validated['province'] ?? null,
             'country' => $validated['country'] ?? null,
             'postal_code' => $validated['postal_code'] ?? null,
+            'latitude' => $coordinates['latitude'] ?? null,
+            'longitude' => $coordinates['longitude'] ?? null,
         ]);
     
         return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);

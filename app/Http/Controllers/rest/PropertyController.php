@@ -4,6 +4,7 @@ namespace App\Http\Controllers\rest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Property;
+use App\Models\Address;
 use App\Models\Room;
 
 class PropertyController extends Controller
@@ -70,6 +71,9 @@ class PropertyController extends Controller
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
+
+        $fullAddress = "{$validatedData['line_1']}, {$validatedData['line_2']}, {$validatedData['province']}, {$validatedData['country']}, {$validatedData['postal_code']}";
+        $coordinates = Address::getCoordinates($fullAddress);
     
         // Create the address for the property
         $property->address()->create([
@@ -78,6 +82,8 @@ class PropertyController extends Controller
             'province' => $validatedData['province'],
             'country' => $validatedData['country'],
             'postal_code' => $validatedData['postal_code'],
+            'latitude' => $coordinates['latitude'] ?? null,
+            'longitude' => $coordinates['longitude'] ?? null,
         ]);
     
         return $this->successResponse(['property' => $property], 'Property created successfully.', 201);

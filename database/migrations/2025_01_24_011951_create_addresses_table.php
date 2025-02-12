@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('province')->nullable();
             $table->string('country')->nullable();
             $table->string('postal_code')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable(); // Storing lat
+            $table->decimal('longitude', 10, 7)->nullable(); // Storing lng
             $table->morphs('addressable'); // For polymorphic relationships
             $table->timestamps();
         });
