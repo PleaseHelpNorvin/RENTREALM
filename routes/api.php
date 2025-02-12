@@ -42,7 +42,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('property')->group(function () {
         Route::get('index', [PropertyController::class, 'index']);
-
+        Route::get('show/{id}',[PropertyController::class, 'show']);
     });
 
     Route::prefix('room')->group(function () {
@@ -94,9 +94,9 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
-    Route::prefix('address')->group(function () {
-        Route::get('index', [AddressController::class, 'index']);
-    });
+    // Route::prefix('address')->group(function () {
+    //     Route::get('index', [AddressController::class, 'index']);
+    // });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

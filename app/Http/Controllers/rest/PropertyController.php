@@ -93,13 +93,13 @@ class PropertyController extends Controller
     // Show a single property
     public function show($id)
     {
-        $property = Property::find($id)->with('address')->first();
-
+        $property = Property::with('address')->find($id);
+    
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
         }
-
-        return $this->successResponse($property);
+    
+        return $this->successResponse(['property' => $property], "{$property->name} Fetched Successfully");
     }
 
     // Update an existing property
