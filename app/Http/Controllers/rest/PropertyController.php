@@ -186,4 +186,75 @@ class PropertyController extends Controller
 
         return $this->successResponse(null, 'Property and related rooms deleted successfully.');
     }
+
+
+    public function search(Request $request)
+    {
+        $query = Property::query()->with('address');
+    
+        // Search by property name (case-insensitive)
+        if ($request->filled('name')) {
+            $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->name) . '%']);
+        }
+    
+        // Search by address fields (case-insensitive)
+        if ($request->filled('address')) {
+            $query->whereHas('address', function ($q) use ($request) {
+                $q->whereRaw('LOWER(line_1) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(line_2) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(province) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(country) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('postal_code LIKE ?', ['%' . $request->address . '%']); // No LOWER() for postal_code
+            });
+        }
+    
+        // Apply exact match filters (type, status, gender_allowed)
+        foreach (['type', 'status', 'gender_allowed'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->whereRaw("LOWER($filter) LIKE ?", ['%' . strtolower($request->$filter) . '%']);
+            }
+        }
+    
+        // Handle pets_allowed (convert to boolean)
+        if ($request->has('pets_allowed')) {
+            $petsAllowed = filter_var($request->pets_allowed, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if (!is_null($petsAllowed)) {
+                $query->where('pets_allowed', $petsAllowed);
+            }
+        }
+    
+        // Debug SQL Query
+        \Log::info($query->toSql(), $query->getBindings()); // Logs the actual SQL query in storage/logs/laravel.log
+    
+        // Get filtered properties
+        $properties = $query->get();
+    
+        return $this->successResponse(['properties' => $properties], 'Searched Property fetched successfully.');
+    }
+    
+
+    // public function search(Request $request)
+    // {
+    //     $query = Room::query();
+
+    //     if ($request->has('name')) {
+    //         $query->where('name', 'LIKE', "%{$request->name}%");
+    //     }
+    
+    //     if ($request->has('price')) {
+    //         $query->where('price', '<=', $request->price);
+    //     }
+    
+    //     if ($request->has('availability')) {
+    //         $query->where('availability', $request->availability);
+    //     }
+    
+    //     if ($request->has('property_id')) {
+    //         $query->where('property_id', $request->property_id);
+    //     }
+    
+    //     $rooms = $query->with('property')->get();
+
+    //     return $this->successResponse(['properties' => $rooms], 'Room fetched successfully');
+    // }
 }
