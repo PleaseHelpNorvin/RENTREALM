@@ -99,7 +99,7 @@ class PropertyController extends Controller
             return $this->notFoundResponse(null, 'Property not found.');
         }
     
-        return $this->successResponse(['property' => $property], "{$property->name} Fetched Successfully");
+        return $this->successResponse(['properties' => $property], "{$property->name} Fetched Successfully");
     }
 
     // Update an existing property

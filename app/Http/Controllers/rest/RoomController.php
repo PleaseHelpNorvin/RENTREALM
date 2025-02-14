@@ -34,9 +34,10 @@ class RoomController extends Controller
 
         $room->room_picture_url = json_decode($room->room_picture_url);
 
-        return $this->successResponse(['rooms'=>$room], 'Room details.');
+        return $this->successResponse(['rooms'=>$room], 'specific Room details.');
     }
 
+    // fetch a room list
     public function showRoomsByPropertyId($property_id) 
     {
         $rooms = Room::where("property_id", $property_id)->get();
