@@ -17,22 +17,16 @@ return new class extends Migration
             $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
             $table->foreignId('rental_agreement_id')->constrained('rental_agreements')->onDelete('restrict');
-            // Leasing info
-            $table->date('start_date');
-            $table->date('end_date')->nullable();
-            $table->decimal('rent_price', 10, 2);
-            $table->decimal('deposit', 10, 2)->nullable();
+            // // Leasing info
+            // $table->date('start_date');
+            // $table->date('end_date')->nullable();
+            //status info
             $table->enum('payment_status', ['paid', 'due', 'overdue'])->default('paid');
             $table->enum('status', ['active', 'inactive', 'evicted', 'moved_out'])->default('active');
             // Contact info
             $table->string('emergency_contact_name')->nullable();
             $table->string('emergency_contact_phone')->nullable();
-            // Tenant features
-            $table->boolean('has_pets')->default(false);
-            $table->boolean('wifi_enabled')->default(false);
-            $table->boolean('has_laundry_access')->default(false);
-            $table->boolean('has_private_fridge')->default(false);
-            $table->boolean('has_tv')->default(false);
+
             $table->timestamps();
         });
     }
@@ -45,3 +39,8 @@ return new class extends Migration
         Schema::dropIfExists('tenants');
     }
 };
+// how to use rental agreement data 
+
+// $tenant = Tenant::with('rentalAgreement')->find($tenantId);
+// $rentStartDate = $tenant->rentalAgreement->rent_start_date;
+// $rentEndDate = $tenant->rentalAgreement->rent_end_date;
