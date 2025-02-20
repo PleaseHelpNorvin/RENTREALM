@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('checkout_sessions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('billing_id')->constrained('billings')->onDelete('cascade');
+            $table->string('session_id'); // Store PayMongo session ID
+            $table->string('payment_method'); // e.g., GCash
+            $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamps();
         });
     }

@@ -13,34 +13,29 @@ class Tenant extends Model
         'profile_id',
         'room_id',
         'rental_agreement_id',
-        'start_date',
-        'end_date',
-        'rent_price',
-        'deposit',
         'payment_status',
         'status',
-        'emergency_contact_name',
-        'emergency_contact_phone',
-        'has_pets',
-        'wifi_enabled',
-        'has_laundry_access',
-        'has_private_fridge',
-        'has_tv',
+        'next_payment_date',
+        'evacuation_date',
+        'move_out_date',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'next_payment_date' => 'date',
+        'evacuation_date' => 'date',
+        'move_out_date' => 'date',
     ];
 
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
+    // public function room()
+    // {
+    //     return $this->belongsTo(Room::class);
+    // }
 
-    public function rentalAgreement()
+    public function rentalAgreements()
     {
-        return $this->belongsTo(RentalAgreement::class, 'rental_agreement_id');
+        return $this->belongsToMany(RentalAgreement::class, 'tenant_rental_agreements');
     }
 
     public function userProfile()

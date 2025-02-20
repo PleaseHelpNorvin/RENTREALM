@@ -37,10 +37,10 @@ class Room extends Model
         return $this->belongsTo(Property::class);
     }
 
-    public function tenants()
-    {
-        return $this->hasMany(Tenant::class);
-    }
+    // public function tenants()
+    // {
+    //     return $this->hasMany(Tenant::class);
+    // }
 
     public function rentalAgreements()
     {

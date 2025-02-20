@@ -21,6 +21,8 @@ return new class extends Migration
             $table->date('rent_start_date');
             $table->date('rent_end_date')->nullable();
 
+            $table->unsignedTinyInteger('payment_day_cycle')->default(30); // 15th or 30th
+
             $table->decimal('rent_price', 10, 2);
             $table->decimal('deposit', 10, 2)->nullable();
 

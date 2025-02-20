@@ -23,6 +23,7 @@ class Property extends Model
         'updated_at' => 'datetime',
         'type' => 'string',
         'status' => 'string',
+        'property_picture_url' => 'array',
     ];
 
     public function address()

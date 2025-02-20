@@ -16,9 +16,15 @@ class RentalAgreement extends Model
         'agreement_code',
         'rent_start_date',
         'rent_end_date',
+        'payment_day_cycle',
         'rent_price',
         'deposit',
-        'status'
+        'status',
+        'has_pets',
+        'wifi_enabled',
+        'has_laundry_access',
+        'has_private_fridge',
+        'has_tv',
     ];
 
     protected $casts = [
@@ -38,7 +44,9 @@ class RentalAgreement extends Model
 
     public function tenants()
     {
-        return $this->hasMany(Tenant::class, 'rental_agreement_id');
+        // return $this->hasMany(Tenant::class, 'rental_agreement_id');
+        return $this->belongsToMany(Tenant::class, 'tenant_rental_agreements');
+
     }
 }
 
