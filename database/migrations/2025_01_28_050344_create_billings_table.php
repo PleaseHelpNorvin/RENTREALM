@@ -28,6 +28,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
             $table->decimal('amount_due', 10, 2);
             $table->enum('status', ['pending', 'paid', 'overdue'])->default('pending');
+            $table->date('next_payment_date')->nullable();
             $table->timestamps();
         });
     }

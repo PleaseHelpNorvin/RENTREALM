@@ -20,9 +20,9 @@ return new class extends Migration
             // $table->foreignId('rental_agreement_id')->constrained('rental_agreements')->onDelete('cascade');
 
             // status info
-            $table->enum('payment_status', ['paid', 'due', 'overdue'])->default('paid');
+            // $table->enum('payment_status', ['paid', 'due', 'overdue'])->default('paid');
             $table->enum('status', ['active', 'inactive', 'evicted', 'moved_out'])->default('active');
-            $table->date('next_payment_date')->nullable();
+            // $table->date('next_payment_date')->nullable();
 
             // Evacuation status info             
             $table->date('evacuation_date')->nullable(); // Stores when the tenant starts evacuation
