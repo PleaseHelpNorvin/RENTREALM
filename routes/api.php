@@ -16,6 +16,12 @@ use App\Http\Controllers\rest\TenantController;
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);
 Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::prefix('property')->group(function () {
+    Route::get('index', [PropertyController::class, 'index']);
+});
+Route::prefix('room')->group(function () {
+    Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+});
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function() {
@@ -38,14 +44,13 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
-    Route::prefix('property')->group(function () {
-        Route::get('index', [PropertyController::class, 'index']);
+    // Route::prefix('property')->group(function () {
+    //     Route::get('index', [PropertyController::class, 'index']);
+    // });
 
-    });
-
-    Route::prefix('room')->group(function () {
-        Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
-    });
+    // Route::prefix('room')->group(function () {
+    //     Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+    // });
 
     // Route::prefix('rental_agreement')->group(function () {
     //     Route::post('store', [RoomController::class, 'store']);
