@@ -18,6 +18,20 @@ use App\Http\Controllers\rest\AddressController;
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);
 Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+Route::prefix('property')->group(function () {
+    Route::get('index', [PropertyController::class, 'index']);
+    Route::get('show/{id}',[PropertyController::class, 'show']);
+    Route::get('search', [PropertyController::class, 'search']);
+});
+
+Route::prefix('room')->group(function () {
+    Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+    Route::get('show/{id}',[RoomController::class, 'show']);
+    
+});
+
+
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function() {
@@ -40,17 +54,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
-    Route::prefix('property')->group(function () {
-        Route::get('index', [PropertyController::class, 'index']);
-        Route::get('show/{id}',[PropertyController::class, 'show']);
-        Route::get('search', [PropertyController::class, 'search']);
-    });
-
-    Route::prefix('room')->group(function () {
-        Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
-        Route::get('show/{id}',[RoomController::class, 'show']);
-        
-    });
+    
 
     // Route::prefix('rental_agreement')->group(function () {
     //     Route::post('store', [RoomController::class, 'store']);

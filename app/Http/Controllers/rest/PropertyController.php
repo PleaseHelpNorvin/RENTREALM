@@ -14,6 +14,12 @@ class PropertyController extends Controller
     {
         // Eager-load the 'address' relationship with properties
         $properties = Property::with('address')->get();
+
+        // Decode JSON field before returning
+        $properties->transform(function ($property) {
+            $property->property_picture_url = json_decode($property->property_picture_url, true);
+            return $property;
+        });
     
         if ($properties->isEmpty()) {
             return $this->notFoundResponse(null, 'No properties found.');

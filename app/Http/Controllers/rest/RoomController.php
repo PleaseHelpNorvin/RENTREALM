@@ -16,6 +16,8 @@ class RoomController extends Controller
     {
         $rooms = Room::all();
 
+
+
         if ($rooms->isEmpty()) {
             return $this->notFoundResponse(null, 'No Rooms found.');
         }
@@ -46,11 +48,10 @@ class RoomController extends Controller
             return $this->notFoundResponse(null, "No rooms in property: $property_id");
         }
         $rooms->transform(function($room) {
-            $room->room_picture_url = url('storage/' . $room->room_picture_url);
+            $room->room_picture_url = json_decode($room->room_picture_url, true);
             return $room;
         });
     
-
         return $this->successResponse(['rooms' => $rooms], "Rooms in property: $property_id is fetched successfully");
     }
 

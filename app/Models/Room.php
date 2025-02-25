@@ -29,7 +29,7 @@ class Room extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        // 'room_picture_url' => 'array', 
+        'room_picture_url' => 'array', 
     ];
 
     public function property()

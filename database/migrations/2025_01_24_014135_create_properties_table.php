@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('property_picture_url')->nullable();
+            $table->json('property_picture_url')->nullable();
             $table->enum('gender_allowed', ['boys-only', 'girls-only'])->default('boys-only');
             $table->boolean('pets_allowed')->default(false);
             $table->enum('type', ['apartment', 'house', 'boarding-house'])->default('apartment');

@@ -26,6 +26,7 @@ class Property extends Model
         'property_picture_url' => 'array',
     ];
 
+
     public function address()
     {
         return $this->morphOne(Address::class, 'addressable');
