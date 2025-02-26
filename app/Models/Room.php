@@ -32,21 +32,23 @@ class Room extends Model
         'room_picture_url' => 'array', 
     ];
 
+    public function inquiries()
+    {
+        return $this->hasMany(Inquiry::class, 'room_id');
+    }
+
     public function property()
     {
         return $this->belongsTo(Property::class);
     }
-
-    // public function tenants()
-    // {
-    //     return $this->hasMany(Tenant::class);
-    // }
 
     public function rentalAgreements()
     {
         return $this->hasMany(RentalAgreement::class);
     }
     
+
+
 
     protected static function booted()
     {

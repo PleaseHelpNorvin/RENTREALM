@@ -9,7 +9,6 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-
     //  CREATE TABLE billings (
     //     id INT AUTO_INCREMENT PRIMARY KEY,
     //     tenant_id INT NOT NULL,
@@ -32,6 +31,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

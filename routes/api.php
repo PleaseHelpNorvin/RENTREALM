@@ -10,6 +10,7 @@ use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
+use App\Http\Controllers\rest\InquiryController;
 
 
 
@@ -54,7 +55,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
     });
 
-    
+    Route::prefix('inquiry')->group(function(){
+        Route::post('store', [InquiryController::class, 'store']);
+        Route::get('index', [InquiryController::class, 'index']);
+        Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+        Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    });
 
     // Route::prefix('rental_agreement')->group(function () {
     //     Route::post('store', [RoomController::class, 'store']);
@@ -100,9 +106,12 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
-    // Route::prefix('address')->group(function () {
-    //     Route::get('index', [AddressController::class, 'index']);
-    // });
+    Route::prefix('inquiry')->group(function () {
+        Route::post('store', [InquiryController::class, 'store']);
+        Route::get('index', [InquiryController::class, 'index']);
+        Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+        Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

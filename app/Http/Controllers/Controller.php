@@ -22,6 +22,16 @@ abstract class Controller extends BaseController
         ], $status);
     }
 
+    //Created Response
+    protected function createdResponse($data, $message = 'created', $status = 201)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $status);
+    }
+
     // Error Response
     protected function errorResponse($data = null, $message = 'Error', $status = 400)
     {

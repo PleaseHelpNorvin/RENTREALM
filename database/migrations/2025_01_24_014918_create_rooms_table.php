@@ -37,5 +37,10 @@ return new class extends Migration
     {
         Schema::dropIfExists('rooms');
     }
+
+    public function inquiries()
+    {
+        return $this->hasMany(Inquiry::class, 'profile_id');
+    }
     
 };
