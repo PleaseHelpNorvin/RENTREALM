@@ -61,6 +61,13 @@ class InquiryController extends Controller
         ]);
     
         $inquiry->update($validated);
+
+        $inquiry->notifications()->create([
+            'user_id' => $inquiry->profile->user_id,
+            'title' => "Inquiry Accepted!",
+            'message' => "Your inquiry on room {$inquiry->room->room_code} has been accepted. Admins might call you.",
+            'is_read' => false,
+        ]);
     
         return $this->successResponse(['inquiry' => $inquiry], "Inquiry $id updated successfully");
     }

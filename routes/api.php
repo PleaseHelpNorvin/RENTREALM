@@ -11,7 +11,7 @@ use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\InquiryController;
-
+use App\Http\Controllers\rest\NotificationController;
 
 
 
@@ -60,6 +60,15 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [InquiryController::class, 'index']);
         Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
         Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    });
+
+
+    Route::prefix('notification')->group(function(){
+        Route::get('index/{user_id}', [NotificationController::class, 'index']);
+        Route::get('indexUnread/{user_id}', [NotificationController::class, 'indexUnread']);
+        Route::get('indexRead/{user_id}', [NotificationController::class, 'indexRead']);
+        Route::get('show/{$id}', [NotificationController::class, 'show']);
+        Route::patch('updateIsRead/{id}',[NotificationController::class, "updateIsRead"]);
     });
 
     // Route::prefix('rental_agreement')->group(function () {
