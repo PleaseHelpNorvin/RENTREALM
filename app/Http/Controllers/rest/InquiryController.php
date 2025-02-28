@@ -34,7 +34,23 @@ class InquiryController extends Controller
 
 
         $inquiry = Inquiry::create($Validated);
-        return $this->createdResponse(['inquiry' => [$inquiry] ], 'Your Inquiry has been reviewed now by the admins or landlord');
+        
+        $room = $inquiry->room;
+        $property = $room->property;
+        $address = $property->address; 
+    
+        $propertyName = $property->name;
+        $fullAddress = $address ? "{$address->line_1}, {$address->line_2}, {$address->province}, {$address->country}, {$address->postal_code}" : 'No address available';
+    
+
+        $inquiry->notifications()->create([
+            'user_id' => $inquiry->profile->user_id,
+            'title' => "Inquiry Being Reviewed!",
+            'message' => "Thank you for inquiring about room {$room->room_code} at '{$propertyName}', located at {$fullAddress}. We will notify you with updates regarding your inquiry through notifications.",
+            'is_read' => false,
+        ]);
+
+        return $this->createdResponse(['inquiry' => [$inquiry]], 'Your Inquiry has been reviewed now by the admins or landlord');
     }
 
     public function show($id)
@@ -65,7 +81,7 @@ class InquiryController extends Controller
         $inquiry->notifications()->create([
             'user_id' => $inquiry->profile->user_id,
             'title' => "Inquiry Accepted!",
-            'message' => "Your inquiry on room {$inquiry->room->room_code} has been accepted. Admins might call you.",
+            'message' => "Your inquiry on room {$inquiry->room->room_code} has been accepted. Admins might call you for further instructions.",
             'is_read' => false,
         ]);
     

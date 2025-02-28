@@ -33,7 +33,7 @@ class NotificationController extends Controller
             return $this->notFoundResponse(null, "No unread notifications found for User $user_id.");
         }
 
-        return $this->successResponse(['notifications' => $unreadNotifications], "Unread notifications found for User $user_id.");
+        return $this->successResponse(['notifications' => [$unreadNotifications]], "Unread notifications found for User $user_id.");
     }
 
     public function indexRead($user_id)
@@ -46,7 +46,7 @@ class NotificationController extends Controller
             return $this->notFoundResponse(null, "No read notifications found for User $user_id.");
         }
 
-        return $this->successResponse(['notifications' => $readNotifications], "Read notifications found for User $user_id.");
+        return $this->successResponse(['notifications' => [$readNotifications]], "Read notifications found for User $user_id.");
     }
 
 
@@ -62,17 +62,17 @@ class NotificationController extends Controller
     }
 
     public function updateIsRead($id) {
-        $notification = Notification::where('user_id', $user_id)
-            ->where('id', $id)
+        $notification = Notification::where('id', $id)
             ->first();
     
         if (!$notification) {
-            return $this->notFoundResponse(null, "Notification $id not found for User $user_id.");
+            return $this->notFoundResponse(null, "Notification $id not found.");
         }
     
-        $notification->update(['is_read' => true]);
-    
-        return $this->successResponse(['notification' => $notification], "Notification $id marked as read.");
+        $notification->update(['is_read' => 1]);
+        // $notification->update(['is_read' => true]);
+
+        return $this->successResponse(['notifications' => [$notification]], "Notification $id marked as read.");
     }
 
 }
