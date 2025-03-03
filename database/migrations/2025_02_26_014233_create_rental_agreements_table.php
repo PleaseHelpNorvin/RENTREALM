@@ -22,6 +22,9 @@ return new class extends Migration
             
             $table->decimal('rent_price', 10, 2);
             $table->decimal('deposit', 10, 2)->nullable();
+
+            $table->longText('description')->nullable();
+            $table->longText('signature_svg_string');
             
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();

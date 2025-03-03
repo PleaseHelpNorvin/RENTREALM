@@ -59,6 +59,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store', [InquiryController::class, 'store']);
         Route::get('index', [InquiryController::class, 'index']);
         Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+        Route::get('show/room/{room_code}', [InquiryController::class, 'getInquiriesByRoomCode']);
         Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
     });
 
@@ -71,9 +72,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::patch('updateIsRead/{id}',[NotificationController::class, "updateIsRead"]);
     });
 
-    // Route::prefix('rental_agreement')->group(function () {
-    //     Route::post('store', [RoomController::class, 'store']);
-    // });
+    Route::prefix('rental_agreement')->group(function () {
+        Route::get('index', [RentalAgreementController::class,'index']);
+        Route::post('store', [RentalAgreementController::class, 'store']);
+    });
 
 
     Route::prefix('tenant')->group(function() {

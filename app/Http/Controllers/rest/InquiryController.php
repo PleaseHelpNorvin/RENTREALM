@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\rest;
 
+use App\Models\Room;
 use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -57,12 +58,24 @@ class InquiryController extends Controller
     {
         $inquiry = Inquiry::find($id);
 
-        if(!$inquiry) {
-            return $this->notFoundResponse(null, "Inquiry $id is notfound");
+        if (!$inquiry) {
+            return $this->notFoundResponse(null, "Inquiry $id is not found");
         }
 
-        return $this->successResponse(['inquiry' => [$inquiry]], "Inqury $id Found");
+        // Fetch the room details
+        $room = Room::find($inquiry->room_id);
+
+        if (!$room) {
+            return $this->notFoundResponse(null, "Room {$inquiry->room_id} is not found");
+        }
+
+        // Attach the rent_price from the room to the inquiry response
+        $inquiryData = $inquiry->toArray();
+        $inquiryData['rent_price'] = $room->rent_price; 
+
+        return $this->successResponse(['inquiry' => [$inquiryData]], "Inquiry $id Found");
     }
+
 
     public function update(Request $request, $id)
     {
@@ -75,17 +88,34 @@ class InquiryController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:pending,accepted,rejected',
         ]);
+
+        if ($validated['status'] === 'accepted') {
+            $inquiry->accepted_at = now();
+        }
     
         $inquiry->update($validated);
 
         $inquiry->notifications()->create([
             'user_id' => $inquiry->profile->user_id,
             'title' => "Inquiry Accepted!",
-            'message' => "Your inquiry on room {$inquiry->room->room_code} has been accepted. Admins might call you for further instructions.",
+            'message' => "Your inquiry on {$inquiry->room->room_code} has been accepted. Admins might call you for further instructions.",
             'is_read' => false,
         ]);
     
         return $this->successResponse(['inquiry' => $inquiry], "Inquiry $id updated successfully");
     }
 
+
+    public function getInquiriesByRoomCode($room_code)
+    {
+        $inquiries = Inquiry::whereHas('room', function ($query) use ($room_code) {
+            $query->where('room_code', $room_code);
+        })->get();
+
+        if ($inquiries->isEmpty()) {
+            return $this->notFoundResponse(null, "No inquiries found for room code $room_code");
+        }
+
+        return $this->successResponse(['inquiries' => $inquiries], "Inquiries for room code $room_code fetched successfully");
+    }
 }

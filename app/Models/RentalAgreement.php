@@ -11,20 +11,16 @@ class RentalAgreement extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'property_id',
-        'room_id',
+        'inquiry_id',
         'agreement_code',
         'rent_start_date',
         'rent_end_date',
-        'payment_day_cycle',
+
         'rent_price',
         'deposit',
+        'description',
+        'signature_svg_string',
         'status',
-        'has_pets',
-        'wifi_enabled',
-        'has_laundry_access',
-        'has_private_fridge',
-        'has_tv',
     ];
 
     protected $casts = [
@@ -32,21 +28,9 @@ class RentalAgreement extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function property()
+    public function inquiry()
     {
-        return $this->belongsTo(Property::class);
-    }
-
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
-
-    public function tenants()
-    {
-        // return $this->hasMany(Tenant::class, 'rental_agreement_id');
-        return $this->belongsToMany(Tenant::class, 'tenant_rental_agreements');
-
+        return $this->belongsTo(Inquiry::class, 'inquiry_id');
     }
 }
 

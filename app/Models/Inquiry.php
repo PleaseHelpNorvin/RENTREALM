@@ -18,6 +18,7 @@ class Inquiry extends Model
         'has_laundry_access',
         'has_private_fridge',
         'has_tv',
+        'accepted_at',
     ];
 
     /**
@@ -38,5 +39,10 @@ class Inquiry extends Model
     public function notifications()
     {
         return $this->morphMany(Notification::class, 'notifiable'); 
+    }
+
+    public function rentalAgreement()
+    {
+        return $this->hasOne(RentalAgreement::class);
     }
 }
