@@ -18,11 +18,11 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted','rejected',])->default('pending');
     
 
-            $table->boolean('has_pets')->default(false);
-            $table->boolean('wifi_enabled')->default(false);
-            $table->boolean('has_laundry_access')->default(false);
-            $table->boolean('has_private_fridge')->default(false);
-            $table->boolean('has_tv')->default(false);
+            // $table->boolean('has_pets')->default(false);
+            // $table->boolean('wifi_enabled')->default(false);
+            // $table->boolean('has_laundry_access')->default(false);
+            // $table->boolean('has_private_fridge')->default(false);
+            // $table->boolean('has_tv')->default(false);
 
             $table->dateTime('accepted_at')->nullable();
             $table->timestamps();

@@ -26,11 +26,11 @@ class InquiryController extends Controller
         $Validated = $request->validate([
             'profile_id' => 'required|exists:user_profiles,id',
             'room_id' => 'required|exists:rooms,id',
-            'has_pets' => 'boolean',
-            'wifi_enabled' => 'boolean',
-            'has_laundry_access' => 'boolean',
-            'has_private_fridge' => 'boolean',
-            'has_tv' => 'boolean',
+            // 'has_pets' => 'boolean',
+            // 'wifi_enabled' => 'boolean',
+            // 'has_laundry_access' => 'boolean',
+            // 'has_private_fridge' => 'boolean',
+            // 'has_tv' => 'boolean',
         ]);
 
 

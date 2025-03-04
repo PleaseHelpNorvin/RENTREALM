@@ -17,7 +17,7 @@ class RentalAgreement extends Model
         'rent_end_date',
 
         'rent_price',
-        'deposit',
+        'persons',
         'description',
         'signature_svg_string',
         'status',

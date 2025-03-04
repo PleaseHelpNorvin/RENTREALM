@@ -13,11 +13,11 @@ class Inquiry extends Model
         'profile_id',
         'room_id',
         'status',
-        'has_pets',
-        'wifi_enabled',
-        'has_laundry_access',
-        'has_private_fridge',
-        'has_tv',
+        // 'has_pets',
+        // 'wifi_enabled',
+        // 'has_laundry_access',
+        // 'has_private_fridge',
+        // 'has_tv',
         'accepted_at',
     ];
 
