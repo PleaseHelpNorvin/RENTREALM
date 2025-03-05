@@ -76,6 +76,11 @@ class InquiryController extends Controller
         return $this->successResponse(['inquiry' => [$inquiryData]], "Inquiry $id Found");
     }
 
+    // public function checkInquiryByProfileId() 
+    // {
+    //     $inquiry = Inquiry::where
+    // }
+
 
     public function update(Request $request, $id)
     {

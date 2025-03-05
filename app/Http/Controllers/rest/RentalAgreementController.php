@@ -19,34 +19,30 @@ class RentalAgreementController extends Controller
         if ($rentalAgreements->isEmpty()) {
             return $this->errorResponse(null, "no rental agreements found");
         }
-        return $this->successResponse(['rentalAgreements' => [$rentalAgreements], "rental agreements successfully fetched"]);
+        return $this->successResponse(['rentalAgreements' => $rentalAgreements], "rental agreements successfully fetched");
     }
 
     public function store(Request $request) 
     {
         $validatedData = $request->validate([
-            'inquiry_id' => 'required|exists:inquiries,id',
-            'rent_end_date' => 'nullable|date',
-            'deposit' => 'nullable|numeric',
+            'inquiry_id' => 'required|exists:inquiries,id', 
+            'rent_start_date' => 'required|date',  
+            'rent_end_date' => 'nullable|date',  
+            'person_count' => 'required|integer|min:1',
+            'total_monthly_due' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'signature_svg_string' => 'required|string',
-            // 'status' => 'required|in:active,inactive',
         ]);
     
-        $inquiry = Inquiry::with('room')->findOrFail($validatedData['inquiry_id']);
-    
-        // Ensure rent_start_date is set only when the inquiry was accepted
-        if (!$inquiry->accepted_at) {
-            return $this->errorResponse(null, "The inquiry has not been accepted yet");
-        }
-    
-        $validatedData['rent_start_date'] = $inquiry->accepted_at;
-        $validatedData['rent_price'] = $inquiry->room->rent_price; 
-    
-        // Create the Rental Agreement
+        // Generate agreement_code (format: agreement-XXXXXX)
+        $validatedData['agreement_code'] = 'agreement-' . mt_rand(100000, 999999);
+        $validatedData['status'] = 'active';
+        // Create Rental Agreement
         $rentalAgreement = RentalAgreement::create($validatedData);
-    
-        return $this->successResponse(['rentalAgreement' => $rentalAgreement], "Rental agreement created successfully");
+        
+
+        
+        return $this->successResponse(['rentalAgreement' => [$rentalAgreement]], "Rental agreement created successfully");
     }
     
 }

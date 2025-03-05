@@ -16,8 +16,10 @@ class RentalAgreement extends Model
         'rent_start_date',
         'rent_end_date',
 
-        'rent_price',
-        'persons',
+        // 'rent_price',
+        'person_count',
+        'total_monthly_due',
+
         'description',
         'signature_svg_string',
         'status',
@@ -26,6 +28,8 @@ class RentalAgreement extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'rent_start_date'=> 'date',
+        'end_date_date' => 'date',
     ];
 
     public function inquiry()

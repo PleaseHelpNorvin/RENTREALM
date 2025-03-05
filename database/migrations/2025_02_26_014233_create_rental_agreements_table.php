@@ -20,8 +20,8 @@ return new class extends Migration
             $table->date('rent_start_date');
             $table->date('rent_end_date')->nullable();
             
-            $table->decimal('rent_price', 10, 2);
-            $table->integer('persons count', 10, 2)->nullable();
+            $table->integer('person_count')->nullable();
+            $table->decimal('total_monthly_due', 10, 2);
 
             $table->longText('description')->nullable();
             $table->longText('signature_svg_string');
