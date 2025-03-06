@@ -21,7 +21,7 @@ class RentalAgreement extends Model
         'total_monthly_due',
 
         'description',
-        'signature_svg_string',
+        'signature_png_string',
         'status',
     ];
 
@@ -30,6 +30,7 @@ class RentalAgreement extends Model
         'updated_at' => 'datetime',
         'rent_start_date'=> 'date',
         'end_date_date' => 'date',
+        'signature_png_string' => 'array',
     ];
 
     public function inquiry()

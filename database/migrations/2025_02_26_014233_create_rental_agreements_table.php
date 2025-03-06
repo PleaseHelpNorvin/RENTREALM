@@ -24,7 +24,7 @@ return new class extends Migration
             $table->decimal('total_monthly_due', 10, 2);
 
             $table->longText('description')->nullable();
-            $table->longText('signature_svg_string');
+            $table->string('signature_png_string');
             
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();

@@ -52,7 +52,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
         Route::post('store', [RentalAgreementController::class, 'store']);
-        Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
+        Route::get('show/{id}', [RentalAgreementController::class, 'show']);
+        Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
+
+
     });
 
     Route::prefix('inquiry')->group(function(){
