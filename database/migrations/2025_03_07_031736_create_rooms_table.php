@@ -20,14 +20,16 @@ return new class extends Migration
             $table->string('room_details');
             $table->string('category');
             $table->decimal('rent_price', 10, 2);
+            $table->decimal('reservation_fee', 10, 2);
             $table->integer('capacity');
             $table->integer('current_occupants')->nullable();
             $table->integer('min_lease');
             $table->string('size'); // ex: 12ft x 12ft 
-            $table->enum('status', ['available','rented','under_maintenance','full'])->default('available');
+            $table->enum('status', ['vacant','occupied','reserved'])->default('vacant');
             $table->enum('unit_type', ['studio_unit','triplex_unit','alcove','loft_unit', 'shared_unit', 'micro_unit'])->default('studio_unit');
             $table->timestamps();
         });
+
     }
 
     /**
@@ -37,10 +39,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('rooms');
     }
-
-    public function inquiries()
-    {
-        return $this->hasMany(Inquiry::class, 'profile_id');
-    }
-    
 };

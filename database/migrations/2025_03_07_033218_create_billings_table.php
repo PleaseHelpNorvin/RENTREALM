@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    //  CREATE TABLE billings (
+      //  CREATE TABLE billings (
     //     id INT AUTO_INCREMENT PRIMARY KEY,
     //     tenant_id INT NOT NULL,
     //     due_date DATE NOT NULL,

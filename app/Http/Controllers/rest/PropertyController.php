@@ -48,9 +48,8 @@ class PropertyController extends Controller
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'gender_allowed' => 'required|in:boys-only,girls-only',
-            'pets_allowed' => 'required|boolean',
             'type' => 'required|in:apartment,house,boarding-house',
-            'status' => 'required|in:available,rented,full',
+            'status' => 'required|in:vacant,full',
         ]);
     
         $imageUrls = [];
@@ -73,7 +72,7 @@ class PropertyController extends Controller
             'name' => $validatedData['name'],
             'property_picture_url' => $validatedData['property_picture_url'],
             'gender_allowed' => $validatedData['gender_allowed'],
-            'pets_allowed' => $validatedData['pets_allowed'],
+            // 'pets_allowed' => $validatedData['pets_allowed'],
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
@@ -123,7 +122,7 @@ class PropertyController extends Controller
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'gender_allowed' => 'required|in:boys-only,girls-only',
-            'pets_allowed' => 'required|in:0,1,true,false',
+            // 'pets_allowed' => 'required|in:0,1,true,false',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
@@ -152,7 +151,7 @@ class PropertyController extends Controller
             'name' => $validatedData['name'],
             'property_picture_url' => $validatedData['property_picture_url'],
             'gender_allowed' => $validatedData['gender_allowed'],
-            'pets_allowed' => $validatedData['pets_allowed'],
+            // // 'pets_allowed' => $validatedData['pets_allowed'],
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
@@ -220,15 +219,7 @@ class PropertyController extends Controller
                 $query->whereRaw("LOWER($filter) LIKE ?", ['%' . strtolower($request->$filter) . '%']);
             }
         }
-    
-        // Handle pets_allowed (convert to boolean)
-        if ($request->has('pets_allowed')) {
-            $petsAllowed = filter_var($request->pets_allowed, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if (!is_null($petsAllowed)) {
-                $query->where('pets_allowed', $petsAllowed);
-            }
-        }
-    
+
         // Debug SQL Query
         \Log::info($query->toSql(), $query->getBindings()); // Logs the actual SQL query in storage/logs/laravel.log
     

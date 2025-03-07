@@ -13,20 +13,14 @@ return new class extends Migration
     {
         Schema::create('inquiries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
-            $table->enum('status', ['pending', 'accepted','rejected',])->default('pending');
-    
+            $table->string('name');
+            $table->string('contact_no');
+            $table->string('message');
 
-            // $table->boolean('has_pets')->default(false);
-            // $table->boolean('wifi_enabled')->default(false);
-            // $table->boolean('has_laundry_access')->default(false);
-            // $table->boolean('has_private_fridge')->default(false);
-            // $table->boolean('has_tv')->default(false);
-
-            $table->dateTime('accepted_at')->nullable();
             $table->timestamps();
         });
+
     }
 
     /**
@@ -35,5 +29,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('inquiries');
-    }   
+    }
 };

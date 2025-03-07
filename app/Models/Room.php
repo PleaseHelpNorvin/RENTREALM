@@ -18,6 +18,7 @@ class Room extends Model
         'room_details',
         'category',
         'rent_price',
+        'reservation_fee',
         'capacity',
         'current_occupants',
         'min_lease',
@@ -35,6 +36,11 @@ class Room extends Model
     public function inquiries()
     {
         return $this->hasMany(Inquiry::class, 'room_id');
+    }
+
+    public function reservations() 
+    {
+        return $this->hasMany(Reservation::class,'room_id');
     }
 
     public function property()

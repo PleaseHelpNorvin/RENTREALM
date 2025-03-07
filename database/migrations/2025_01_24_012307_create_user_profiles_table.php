@@ -24,8 +24,7 @@ return new class extends Migration
             $table->string('national_id')->nullable();
             $table->string('passport_number')->nullable();
             $table->string('social_security_number')->nullable();
-
-
+            $table->integer('steps')->default(1);
             $table->timestamps();
         });
 

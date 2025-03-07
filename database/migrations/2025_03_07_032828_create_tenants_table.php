@@ -10,7 +10,7 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {   //this a pivot
+    {
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             // Foreign keys
@@ -18,12 +18,13 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'evicted', 'moved_out'])->default('active');
 
             // Evacuation status info             
-            $table->date('evacuation_date')->nullable(); // Stores when the tenant starts evacuation
-            $table->date('move_out_date')->nullable(); // Stores final move-out date
+            $table->date('evacuation_date')->nullable();
+            $table->date('move_out_date')->nullable();
 
             // Contact info
             $table->timestamps();
         });
+
     }
 
     /**

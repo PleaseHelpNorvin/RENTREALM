@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('rental_agreement_id')->constrained('rental_agreements')->onDelete('cascade');
             $table->timestamps();
         });
+
     }
 
     /**

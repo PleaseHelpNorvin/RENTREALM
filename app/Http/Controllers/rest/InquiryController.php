@@ -24,13 +24,10 @@ class InquiryController extends Controller
         \Log::info($request->all());
         
         $Validated = $request->validate([
-            'profile_id' => 'required|exists:user_profiles,id',
             'room_id' => 'required|exists:rooms,id',
-            // 'has_pets' => 'boolean',
-            // 'wifi_enabled' => 'boolean',
-            // 'has_laundry_access' => 'boolean',
-            // 'has_private_fridge' => 'boolean',
-            // 'has_tv' => 'boolean',
+            'name' => 'required|string',
+            'contact_no' => 'required|string|max:11',
+            'message' => 'required|string',
         ]);
 
 
@@ -44,12 +41,12 @@ class InquiryController extends Controller
         $fullAddress = $address ? "{$address->line_1}, {$address->line_2}, {$address->province}, {$address->country}, {$address->postal_code}" : 'No address available';
     
 
-        $inquiry->notifications()->create([
-            'user_id' => $inquiry->profile->user_id,
-            'title' => "Inquiry Being Reviewed!",
-            'message' => "Thank you for inquiring about room {$room->room_code} at '{$propertyName}', located at {$fullAddress}. We will notify you with updates regarding your inquiry through notifications.",
-            'is_read' => false,
-        ]);
+        // $inquiry->notifications()->create([
+        //     'user_id' => $inquiry->profile->user_id,
+        //     'title' => "Inquiry Being Reviewed!",
+        //     'message' => "Thank you for inquiring about room {$room->room_code} at '{$propertyName}', located at {$fullAddress}. We will notify you with updates regarding your inquiry through notifications.",
+        //     'is_read' => false,
+        // ]);
 
         return $this->createdResponse(['inquiry' => [$inquiry]], 'Your Inquiry has been reviewed now by the admins or landlord');
     }
@@ -100,12 +97,12 @@ class InquiryController extends Controller
     
         $inquiry->update($validated);
 
-        $inquiry->notifications()->create([
-            'user_id' => $inquiry->profile->user_id,
-            'title' => "Inquiry Accepted!",
-            'message' => "Your inquiry on {$inquiry->room->room_code} has been accepted. Admins might call you for further instructions.",
-            'is_read' => false,
-        ]);
+        // $inquiry->notifications()->create([
+        //     'user_id' => $inquiry->profile->user_id,
+        //     'title' => "Inquiry Accepted!",
+        //     'message' => "Your inquiry on {$inquiry->room->room_code} has been accepted. Admins might call you for further instructions.",
+        //     'is_read' => false,
+        // ]);
     
         return $this->successResponse(['inquiry' => $inquiry], "Inquiry $id updated successfully");
     }

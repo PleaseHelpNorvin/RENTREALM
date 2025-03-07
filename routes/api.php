@@ -12,6 +12,7 @@ use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\InquiryController;
 use App\Http\Controllers\rest\NotificationController;
+use App\Http\Controllers\rest\ReservationController;
 
 
 
@@ -30,6 +31,11 @@ Route::prefix('room')->group(function () {
     Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
     Route::get('show/{id}',[RoomController::class, 'show']);
     
+});
+Route::prefix('inquiry')->group(function(){
+    Route::post('store', [InquiryController::class, 'store']);
+    Route::get('index', [InquiryController::class, 'index']);
+    Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
 });
 
 
@@ -58,12 +64,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     });
 
-    Route::prefix('inquiry')->group(function(){
-        Route::post('store', [InquiryController::class, 'store']);
-        Route::get('index', [InquiryController::class, 'index']);
-        Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
-        Route::get('show/room/{room_code}', [InquiryController::class, 'getInquiriesByRoomCode']);
-        Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    Route::prefix('reservation')->group(function(){
+        Route::post('store', [ReservationController::class, 'store']);
+        Route::get('index', [ReservationController::class, 'index']);
+        Route::get('show/{inquiry_id}', [ReservationController::class, 'show']);
+        // Route::get('show/room/{room_code}', [ReservationController::class, 'getInquiriesByRoomCode']);
+        Route::patch('update/{inquiry_id}', [ReservationController::class, 'update']);
     });
 
 

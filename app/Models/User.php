@@ -51,10 +51,10 @@ class User extends Authenticatable
         ];
     }
     //relationships
-    public function userProfile()
-    {
-        return $this->hasOne(UserProfile::class);
-    }
+    // public function userProfile()
+    // {
+    //     return $this->hasOne(UserProfile::class);
+    // }
 
     // Role checkers
     public function isLandlord(): bool
@@ -76,5 +76,10 @@ class User extends Authenticatable
     public function isRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'user_id');
     }
 }

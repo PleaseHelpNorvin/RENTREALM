@@ -10,15 +10,18 @@ class Inquiry extends Model
     use HasFactory;
     //
     protected $fillable = [
-        'profile_id',
         'room_id',
-        'status',
+
+        'name',
+        'contact_no',
+        'message',
+        // 'status',
         // 'has_pets',
         // 'wifi_enabled',
         // 'has_laundry_access',
         // 'has_private_fridge',
         // 'has_tv',
-        'accepted_at',
+        // 'accepted_at',
     ];
 
     /**
@@ -26,10 +29,10 @@ class Inquiry extends Model
      */
 
 
-    public function profile()
-    {
-        return $this->belongsTo(UserProfile::class, 'profile_id');
-    }
+    // public function profile()
+    // {
+    //     return $this->belongsTo(UserProfile::class, 'profile_id');
+    // }
 
     public function room()
     {
@@ -45,4 +48,5 @@ class Inquiry extends Model
     {
         return $this->hasOne(RentalAgreement::class);
     }
+    
 }
