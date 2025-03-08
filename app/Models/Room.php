@@ -18,6 +18,7 @@ class Room extends Model
         'room_details',
         'category',
         'rent_price',
+        'reservation_fee',
         'capacity',
         'current_occupants',
         'min_lease',
@@ -29,16 +30,22 @@ class Room extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'room_picture_url' => 'array', 
     ];
+
+    public function inquiries()
+    {
+        return $this->hasMany(Inquiry::class, 'room_id');
+    }
+
+    public function reservations() 
+    {
+        return $this->hasMany(Reservation::class,'room_id');
+    }
 
     public function property()
     {
         return $this->belongsTo(Property::class);
-    }
-
-    public function tenants()
-    {
-        return $this->hasMany(Tenant::class);
     }
 
     public function rentalAgreements()
@@ -46,6 +53,8 @@ class Room extends Model
         return $this->hasMany(RentalAgreement::class);
     }
     
+
+
 
     protected static function booted()
     {

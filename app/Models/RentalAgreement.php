@@ -11,34 +11,31 @@ class RentalAgreement extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'property_id',
-        'room_id',
+        'inquiry_id',
         'agreement_code',
         'rent_start_date',
         'rent_end_date',
-        'rent_price',
-        'deposit',
-        'status'
+
+        // 'rent_price',
+        'person_count',
+        'total_monthly_due',
+
+        'description',
+        'signature_png_string',
+        'status',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'rent_start_date'=> 'date',
+        'end_date_date' => 'date',
+        'signature_png_string' => 'array',
     ];
 
-    public function property()
+    public function inquiry()
     {
-        return $this->belongsTo(Property::class);
-    }
-
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
-
-    public function tenants()
-    {
-        return $this->hasMany(Tenant::class, 'rental_agreement_id');
+        return $this->belongsTo(Inquiry::class, 'inquiry_id');
     }
 }
 

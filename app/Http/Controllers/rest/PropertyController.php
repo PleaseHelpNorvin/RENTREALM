@@ -4,6 +4,7 @@ namespace App\Http\Controllers\rest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Property;
+use App\Models\Address;
 use App\Models\Room;
 
 class PropertyController extends Controller
@@ -13,6 +14,12 @@ class PropertyController extends Controller
     {
         // Eager-load the 'address' relationship with properties
         $properties = Property::with('address')->get();
+
+        // Decode JSON field before returning
+        $properties->transform(function ($property) {
+            $property->property_picture_url = json_decode($property->property_picture_url, true);
+            return $property;
+        });
     
         if ($properties->isEmpty()) {
             return $this->notFoundResponse(null, 'No properties found.');
@@ -41,9 +48,8 @@ class PropertyController extends Controller
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'gender_allowed' => 'required|in:boys-only,girls-only',
-            'pets_allowed' => 'required|boolean',
             'type' => 'required|in:apartment,house,boarding-house',
-            'status' => 'required|in:available,rented,full',
+            'status' => 'required|in:vacant,full',
         ]);
     
         $imageUrls = [];
@@ -66,10 +72,13 @@ class PropertyController extends Controller
             'name' => $validatedData['name'],
             'property_picture_url' => $validatedData['property_picture_url'],
             'gender_allowed' => $validatedData['gender_allowed'],
-            'pets_allowed' => $validatedData['pets_allowed'],
+            // 'pets_allowed' => $validatedData['pets_allowed'],
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
+
+        $fullAddress = "{$validatedData['line_1']}, {$validatedData['line_2']}, {$validatedData['province']}, {$validatedData['country']}, {$validatedData['postal_code']}";
+        $coordinates = Address::getCoordinates($fullAddress);
     
         // Create the address for the property
         $property->address()->create([
@@ -78,6 +87,8 @@ class PropertyController extends Controller
             'province' => $validatedData['province'],
             'country' => $validatedData['country'],
             'postal_code' => $validatedData['postal_code'],
+            'latitude' => $coordinates['latitude'] ?? null,
+            'longitude' => $coordinates['longitude'] ?? null,
         ]);
     
         return $this->successResponse(['property' => $property], 'Property created successfully.', 201);
@@ -87,13 +98,13 @@ class PropertyController extends Controller
     // Show a single property
     public function show($id)
     {
-        $property = Property::find($id)->with('address')->first();
-
+        $property = Property::with('address')->find($id);
+    
         if (!$property) {
             return $this->notFoundResponse(null, 'Property not found.');
         }
-
-        return $this->successResponse($property);
+    
+        return $this->successResponse(['properties' => [$property]], "{$property->name} Fetched Successfully");
     }
 
     // Update an existing property
@@ -111,7 +122,7 @@ class PropertyController extends Controller
             'country' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'gender_allowed' => 'required|in:boys-only,girls-only',
-            'pets_allowed' => 'required|in:0,1,true,false',
+            // 'pets_allowed' => 'required|in:0,1,true,false',
             'type' => 'required|in:apartment,house,boarding-house',
             'status' => 'required|in:available,rented,full',
         ]);
@@ -140,7 +151,7 @@ class PropertyController extends Controller
             'name' => $validatedData['name'],
             'property_picture_url' => $validatedData['property_picture_url'],
             'gender_allowed' => $validatedData['gender_allowed'],
-            'pets_allowed' => $validatedData['pets_allowed'],
+            // // 'pets_allowed' => $validatedData['pets_allowed'],
             'type' => $validatedData['type'],
             'status' => $validatedData['status'],
         ]);
@@ -180,4 +191,67 @@ class PropertyController extends Controller
 
         return $this->successResponse(null, 'Property and related rooms deleted successfully.');
     }
+
+
+    public function search(Request $request)
+    {
+        $query = Property::query()->with('address');
+    
+        // Search by property name (case-insensitive)
+        if ($request->filled('name')) {
+            $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($request->name) . '%']);
+        }
+    
+        // Search by address fields (case-insensitive)
+        if ($request->filled('address')) {
+            $query->whereHas('address', function ($q) use ($request) {
+                $q->whereRaw('LOWER(line_1) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(line_2) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(province) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('LOWER(country) LIKE ?', ['%' . strtolower($request->address) . '%'])
+                  ->orWhereRaw('postal_code LIKE ?', ['%' . $request->address . '%']); // No LOWER() for postal_code
+            });
+        }
+    
+        // Apply exact match filters (type, status, gender_allowed)
+        foreach (['type', 'status', 'gender_allowed'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->whereRaw("LOWER($filter) LIKE ?", ['%' . strtolower($request->$filter) . '%']);
+            }
+        }
+
+        // Debug SQL Query
+        \Log::info($query->toSql(), $query->getBindings()); // Logs the actual SQL query in storage/logs/laravel.log
+    
+        // Get filtered properties
+        $properties = $query->get();
+    
+        return $this->successResponse(['properties' => $properties], 'Searched Property fetched successfully.');
+    }
+    
+
+    // public function search(Request $request)
+    // {
+    //     $query = Room::query();
+
+    //     if ($request->has('name')) {
+    //         $query->where('name', 'LIKE', "%{$request->name}%");
+    //     }
+    
+    //     if ($request->has('price')) {
+    //         $query->where('price', '<=', $request->price);
+    //     }
+    
+    //     if ($request->has('availability')) {
+    //         $query->where('availability', $request->availability);
+    //     }
+    
+    //     if ($request->has('property_id')) {
+    //         $query->where('property_id', $request->property_id);
+    //     }
+    
+    //     $rooms = $query->with('property')->get();
+
+    //     return $this->successResponse(['properties' => $rooms], 'Room fetched successfully');
+    // }
 }

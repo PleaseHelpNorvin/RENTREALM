@@ -13,7 +13,6 @@ class Property extends Model
         'name', 
         'property_picture_url',
         'gender_allowed',
-        'pets_allowed',
         'type', 
         'status'
     ];
@@ -23,7 +22,9 @@ class Property extends Model
         'updated_at' => 'datetime',
         'type' => 'string',
         'status' => 'string',
+        'property_picture_url' => 'array',
     ];
+
 
     public function address()
     {

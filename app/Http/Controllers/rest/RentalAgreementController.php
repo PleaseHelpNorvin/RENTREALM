@@ -3,122 +3,169 @@
 namespace App\Http\Controllers\rest;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+
 use Illuminate\Http\Request;
 use App\Models\RentalAgreement;
 use App\Models\Property;
 use App\Models\Room;
+use Imagick;
+
 
 class RentalAgreementController extends Controller
 {
     public function index()
     {
-        $rentalAgreement = RentalAgreement::all();
+        $rentalAgreements = RentalAgreement::all();
 
-        if($rentalAgreement -> isEmpty())
-        {
-            return $this->notFoundResponse(null, 'no rental agreement found');
+        // foreach ($rentalAgreements as $agreement) {
+        //     Log::info('Stored Signature:', ['signature' => $agreement->signature_svg_string]);
+        // }
+
+        if ($rentalAgreements->isEmpty()) {
+            return $this->errorResponse(null, "no rental agreements found");
         }
 
-        return $this-> successResponse(['rental_agreements' => $rentalAgreement], 'Rental Agreements fetched Successfully');
+    
+        return $this->successResponse(
+            ['rentalAgreements' => $rentalAgreements], 
+            "Rental agreements successfully fetched"
+        );
     }
+    
 
     public function store(Request $request)
     {
-        \Log::info($request->all());
-
-        $room = Room::findOrFail($request->room_id); // Fetch the room details
-        $minLeaseMonths = $room->min_lease; // Get the min_lease value (e.g., 10 months)
-        $minLeaseDate = Carbon::parse($request->rent_start_date)->addMonths($minLeaseMonths); // Calculate minimum lease end date
-        
-        $validated = $request->validate([
-            'property_id' => 'required|exists:properties,id', // Ensure property exists
-            'room_id' => 'required|exists:rooms,id', // Ensure room exists
-            'rent_start_date' => 'required|date',
-            'rent_end_date' => [
-                'nullable',
-                'date',
-                'after_or_equal:rent_start_date',
-                function ($attribute, $value, $fail) use ($minLeaseDate, $minLeaseMonths) {
-                    if (Carbon::parse($value)->lt($minLeaseDate)) {
-                        $fail('The rent end date must be at least ' . $minLeaseDate->format('Y-m-d') . ' to meet the minimum lease requirement of ' . $minLeaseMonths . ' month(s).');
-                    }
-                }
-            ],
-            'rent_price' => 'required|numeric|min:0',
-            'deposit' => 'nullable|numeric|min:0|gte:' . (0.4 * $request->rent_price), // Ensure deposit is at least 40% of rent_price
-            'status' => 'required|in:active,inactive', // Ensure status is either 'active' or 'inactive'
-        ], [
-            'deposit.gte' => 'The deposit should be a minimum of 40% of the rent price, which is ' . (0.4 * $request->rent_price) . '.',
+        $validatedData = $request->validate([
+            'inquiry_id' => 'required|exists:inquiries,id', 
+            'rent_start_date' => 'required|date',  
+            'rent_end_date' => 'nullable|date',  
+            'person_count' => 'required|integer|min:1',
+            'total_monthly_due' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'signature_png_string' => 'required|file|mimes:png', // File validation
         ]);
-
-
-        $agreementCode = 'agreement-' . Str::random(6) . rand(100, 999);
         
-        $rentalAgreement = RentalAgreement::create([
-            'property_id' => $validated['property_id'],
-            'room_id' => $validated['room_id'],
-            'agreement_code' => $agreementCode,
-            'rent_start_date' => $validated['rent_start_date'],
-            'rent_end_date' => $validated['rent_end_date'],
-            'rent_price' => $validated['rent_price'],
-            'deposit' => $validated['deposit'],
-            'status' => $validated['status'],
-        ]);
-
-        return $this->successResponse(['rental_agreement' => $rentalAgreement], 'Rental Agreement successfully created.');
-    }
-
-    public function show($rentalagreement_id, Request $request)
-    {
-        $rentalAgreement = RentalAgreement::find($rentalagreement_id);
-
-        if(!$rentalAgreement)
-        {
-            return $this->notFoundResponse(null, 'Rental Agreement not Found');
+        // Generate agreement_code (format: agreement-XXXXXX)
+        $agreementCode = 'agreement-' . mt_rand(100000, 999999);
+        
+        // Define the custom directory path
+        $directory = public_path('storage/contract_signatures');
+        
+        // Ensure the directory exists
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);  // Create directory if it doesn't exist
         }
+    
+        // Handle the file upload
+        $signaturePath = $request->file('signature_png_string')->storeAs('contract_signatures', $agreementCode . '.png', 'public');
+    
+        // Save the agreement_code and the file path to the model
+        $validatedData['agreement_code'] = $agreementCode;
+        $validatedData['signature_png_string'] = $signaturePath;
+        $validatedData['status'] = 'active';
         
-        $agreementCode = $rentalAgreement->agreement_code;
+        // Create Rental Agreement
+        $rentalAgreement = RentalAgreement::create($validatedData);
         
-        return $this->successesponse(['rental_agreement' => $rentalAgreement], "Rental Agreement $agreementCode fetched Successfully");
+        // Generate PDF in the background 
+        $this->generatePdfContract($rentalAgreement);
+        
+        // Return success response immediately
+        return $this->successResponse(
+            ['rentalAgreement' => $rentalAgreement], 
+            "Rental agreement created successfully"
+        );
+    }
+        
+    public function generatePdfContract(RentalAgreement $rentalAgreement)
+    {
+        // Ensure the storage directory exists
+        $directory = storage_path("app/public/rental_agreement_contracts");
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+            Log::info("Created directory: " . $directory);
+        } else {
+            Log::info("Directory already exists: " . $directory);
+        } 
+    
+        // Convert SVG to PNG
+        $signatureSvg = $rentalAgreement->signature_svg_string[0]['svg'] ?? null;
+        if (!$signatureSvg) {
+            Log::error('No SVG data found for rental agreement ID: ' . $rentalAgreement->id);
+            return response()->json(['error' => 'No signature SVG found'], 400);
+        }
+    
+        // Define PNG path
+        $pngPath = storage_path("app/public/rental_agreement_contracts/{$rentalAgreement->agreement_code}.png");
+        
+        $conversionSuccess = $this->convertSvgToPng($signatureSvg, $pngPath);
+
+        if (!$conversionSuccess || !file_exists($pngPath)) {
+            Log::error('PNG conversion failed: ' . $pngPath);
+            return response()->json(['error' => 'Failed to convert SVG to PNG'], 500);
+        }
+    
+        if (!file_exists($pngPath)) {
+            Log::error('PNG conversion failed: ' . $pngPath);
+            return response()->json(['error' => 'Failed to convert SVG to PNG'], 500);
+        }
+    
+        // Define PDF storage path
+        $pdfPath = storage_path("app/public/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
+        Log::info("Attempting to save PDF to: " . $pdfPath);
+    
+        // Generate the PDF
+        try {
+            $pdf = Pdf::loadView('rental_agreements.pdf', [
+                'rentalAgreement' => $rentalAgreement,
+                'signatureImage' => asset("storage/rental_agreement_contracts/{$rentalAgreement->agreement_code}.png")
+            ]);
+    
+            $pdf->save($pdfPath);
+
+            if (!file_exists($pdfPath)) {
+                Log::error("PDF file was not created at: " . $pdfPath);
+                return response()->json(['error' => 'Failed to generate PDF'], 500);
+            }
+    
+            Log::info("PDF successfully created at: " . $pdfPath);
+    
+            return response()->json(['pdf_path' => asset("storage/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf")], 200);
+        } catch (\Exception $e) {
+            Log::error("PDF generation error: " . $e->getMessage());
+            return response()->json(['error' => 'PDF generation failed'], 500);
+        }
     }
 
-    public function update($rentalagreement_id, Request $request)
+    public function downloadPdf($id)
     {
-        $validated = $request->validate([
-            'property_id' => 'required|exists:properties,id', // Ensure property exists
-            'room_id' => 'required|exists:rooms,id', // Ensure room exists
-            'rent_start_date' => 'required|date',
-            'rent_end_date' => 'nullable|date|after_or_equal:rent_start_date', // Ensure rent_end_date is after start date
-            'rent_price' => 'required|numeric|min:0',
-            'deposit' => 'nullable|numeric|min:0',
-            'status' => 'required|in:active,inactive', // Ensure status is either 'active' or 'inactive'
-        ]);
+        $rentalAgreement = RentalAgreement::findOrFail($id);
+        $pdfPath = storage_path("app/public/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
 
-        $rentalAgreement = RentalAgreement::findOrFail($rentalagreement_id);
-        if(!$rentalAgreement)
-        {   
-            return $this->notFoundResponse(null, 'Rental Agreement notFOund');
+        if (!file_exists($pdfPath)) {
+            return response()->json(['error' => 'PDF not found'], 404);
         }
 
-
-        $agreementCode = $rentalAgreement->agreement_code;
-
-        $rentalAgreement->update($validated);
-
-        return $this->successResponse(['rentalAgreement' => $rentalAgreement], "Rental Agreement $agreementCode Updated Successfully");
+        return response()->download($pdfPath);
     }
 
-    // Public function showByRoomId($room_id, Request $request)
-    // {
-        
-    // }
-
-
-
-    public function destroy($rentalagreement_id, Request $request)
+    public function show($id)
     {
+        $rentalAgreement = RentalAgreement::findOrFail($id);
         
+        // Append PDF URL only when fetching a single agreement
+        $rentalAgreement->pdf_url = asset("storage/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
+    
+        return $this->successResponse(
+            ['rentalAgreement' => $rentalAgreement], 
+            "Rental agreement retrieved successfully"
+        );
     }
+
+    
+    
 }

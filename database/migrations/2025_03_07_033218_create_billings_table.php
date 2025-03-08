@@ -9,8 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-
-    //  CREATE TABLE billings (
+      //  CREATE TABLE billings (
     //     id INT AUTO_INCREMENT PRIMARY KEY,
     //     tenant_id INT NOT NULL,
     //     due_date DATE NOT NULL,
@@ -25,9 +24,15 @@ return new class extends Migration
     {
         Schema::create('billings', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+            $table->string('description')->nullable();
+            $table->decimal('amount_due', 10, 2);
+            $table->enum('status', ['pending', 'paid', 'overdue'])->default('pending');
+            $table->date('next_payment_date')->nullable();
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

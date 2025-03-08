@@ -14,13 +14,14 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('property_picture_url')->nullable();
+            $table->json('property_picture_url')->nullable();
             $table->enum('gender_allowed', ['boys-only', 'girls-only'])->default('boys-only');
-            $table->boolean('pets_allowed')->default(false);
+            // $table->boolean('pets_allowed')->default(false);
             $table->enum('type', ['apartment', 'house', 'boarding-house'])->default('apartment');
-            $table->enum('status', ['available', 'rented', 'full'])->default('available');
+            $table->enum('status', ['vacant', 'full'])->default('vacant');
             $table->timestamps();
         });
+
     }
 
     /**
@@ -30,6 +31,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('properties');
     }
-
-
 };

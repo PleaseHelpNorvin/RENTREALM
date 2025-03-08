@@ -43,4 +43,9 @@ class UserProfile extends Model
     {
         return $this->BelongsTo(Tenant::class);
     }
+
+    public function inquiries() 
+    {
+        return $this->hasMany(Inquiry::class, 'profile_id');
+    }
 }

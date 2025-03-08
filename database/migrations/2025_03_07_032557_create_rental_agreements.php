@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('rental_agreements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_id')->constrained('properties')->onDelete('cascade');
-            $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
+            $table->foreignId('inquiry_id')->constrained('inquiries')->onDelete('cascade');
+
             $table->string('agreement_code');
+            
             $table->date('rent_start_date');
             $table->date('rent_end_date')->nullable();
-            $table->decimal('rent_price', 10, 2);
-            $table->decimal('deposit', 10, 2)->nullable();
+            
+            $table->integer('person_count')->nullable();
+            $table->decimal('total_monthly_due', 10, 2);
+
+            $table->longText('description')->nullable();
+            $table->string('signature_png_string');
+            
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });

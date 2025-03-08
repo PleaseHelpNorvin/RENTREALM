@@ -9,6 +9,10 @@ use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\TenantController;
+use App\Http\Controllers\rest\AddressController;
+use App\Http\Controllers\rest\InquiryController;
+use App\Http\Controllers\rest\NotificationController;
+use App\Http\Controllers\rest\ReservationController;
 
 
 
@@ -16,12 +20,25 @@ use App\Http\Controllers\rest\TenantController;
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);
 Route::get('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 Route::prefix('property')->group(function () {
     Route::get('index', [PropertyController::class, 'index']);
+    Route::get('show/{id}',[PropertyController::class, 'show']);
+    Route::get('search', [PropertyController::class, 'search']);
 });
+
 Route::prefix('room')->group(function () {
     Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+    Route::get('show/{id}',[RoomController::class, 'show']);
+    
 });
+Route::prefix('inquiry')->group(function(){
+    Route::post('store', [InquiryController::class, 'store']);
+    Route::get('index', [InquiryController::class, 'index']);
+    Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+});
+
+
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function() {
@@ -41,20 +58,25 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
         Route::post('store', [RentalAgreementController::class, 'store']);
-        Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
+        Route::get('show/{id}', [RentalAgreementController::class, 'show']);
+        Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
+
+
     });
 
-    // Route::prefix('property')->group(function () {
-    //     Route::get('index', [PropertyController::class, 'index']);
-    // });
+    Route::prefix('property')->group(function () {
+        Route::get('index', [PropertyController::class, 'index']);
 
-    // Route::prefix('room')->group(function () {
-    //     Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
-    // });
+    });
 
-    // Route::prefix('rental_agreement')->group(function () {
-    //     Route::post('store', [RoomController::class, 'store']);
-    // });
+    Route::prefix('room')->group(function () {
+        Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
+    });
+
+    Route::prefix('rental_agreement')->group(function () {
+        Route::get('index', [RentalAgreementController::class,'index']);
+        Route::post('store', [RentalAgreementController::class, 'store']);
+    });
 
 
     Route::prefix('tenant')->group(function() {
@@ -96,9 +118,12 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
-    // Route::prefix('profile')->group(function () {
-    //     Route::post('show/{id}', [UserProfileController::class, 'show']);
-    // });
+    Route::prefix('inquiry')->group(function () {
+        Route::post('store', [InquiryController::class, 'store']);
+        Route::get('index', [InquiryController::class, 'index']);
+        Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+        Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
