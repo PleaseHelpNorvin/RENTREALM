@@ -11,7 +11,7 @@ class RentalAgreement extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'inquiry_id',
+        'reservation_id',
         'agreement_code',
         'rent_start_date',
         'rent_end_date',

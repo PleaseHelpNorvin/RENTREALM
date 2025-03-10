@@ -19,7 +19,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->timestamps();
         });
-        }
+
+    }
 
     /**
      * Reverse the migrations.

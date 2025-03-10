@@ -38,9 +38,9 @@ class Room extends Model
         return $this->hasMany(Inquiry::class, 'room_id');
     }
 
-    public function reservations() 
+    public function pickedRooms()
     {
-        return $this->hasMany(Reservation::class,'room_id');
+        return $this->hasMany(PickedRoom::class);
     }
 
     public function property()

@@ -78,8 +78,13 @@ class User extends Authenticatable
         return $this->role === $role;
     }
 
+    public function pickedRooms()
+    {
+        return $this->hasMany(PickedRoom::class);
+    }
+
     public function reservations()
     {
-        return $this->hasMany(Reservation::class, 'user_id');
+        return $this->hasManyThrough(Reservation::class, PickedRoom::class);
     }
 }

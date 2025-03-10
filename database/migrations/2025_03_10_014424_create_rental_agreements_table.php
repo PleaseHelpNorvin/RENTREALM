@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rental_agreements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inquiry_id')->constrained('inquiries')->onDelete('cascade');
+            $table->foreignId('reservation_id')->constrained('reservations')->onDelete('cascade');
 
             $table->string('agreement_code');
             
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('rent_end_date')->nullable();
             
             $table->integer('person_count')->nullable();
-            $table->decimal('total_monthly_due', 10, 2);
+            // $table->decimal('total_monthly_due', 10, 2);
 
             $table->longText('description')->nullable();
             $table->string('signature_png_string');
