@@ -64,7 +64,7 @@ class PickedRoomController extends Controller
                 'room_id' => $validatedData['room_id']
             ]);
 
-            return $this->successResponse(['picked_room' => $pickedRoom], "Room successfully added for the user");
+            return $this->successResponse(['picked_room' => [$pickedRoom]], "Room successfully added for the user");
         } catch (ValidationException $e) {
             return $this->errorResponse(null, $e->errors());
         }
