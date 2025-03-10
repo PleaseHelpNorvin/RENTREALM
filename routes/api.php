@@ -5,14 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\rest\RoomController;
 use App\Http\Controllers\rest\UserController;
-use App\Http\Controllers\rest\PropertyController;
-use App\Http\Controllers\rest\UserProfileController;
-use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\InquiryController;
-use App\Http\Controllers\rest\NotificationController;
+use App\Http\Controllers\rest\PropertyController;
+use App\Http\Controllers\rest\PickedRoomController;
 use App\Http\Controllers\rest\ReservationController;
+use App\Http\Controllers\rest\UserProfileController;
+use App\Http\Controllers\rest\NotificationController;
+use App\Http\Controllers\rest\RentalAgreementController;
 
 
 
@@ -53,6 +54,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('storepicture/{user_id}', [UserProfileController::class, 'storePicture']);
         Route::get('show/{user_id}', [UserProfileController::class, 'showByUserId']);
         Route::post('update/{user_id}', [UserProfileController::class, 'update']);
+    });
+
+    Route::prefix('picked_room')->group(function () {
+        Route::get('index', [PickedRoomController::class, 'index']);
+        Route::get('getRoomsByUser/{userId}', [PickedRoomController::class, 'getRoomsByUser']);
+        Route::post('addRoomForUser', [PickedRoomController::class, 'addRoomForUser']);
     });
 
     Route::prefix('rental_agreement')->group(function(){

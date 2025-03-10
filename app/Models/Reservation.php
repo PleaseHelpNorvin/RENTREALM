@@ -25,11 +25,10 @@ class Reservation extends Model
         'approval_date'=> 'datetime',
     ];
 
-    public function room()
+    public function pickedRoom()
     {
-        return $this->belongsTo(Room::class, 'room_id');
+        return $this->belongsTo(PickedRoom::class);
     }
-
     public function user_id()
     {
         return $this->belongsTo(profile::class, 'user_id');
