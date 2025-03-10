@@ -9,14 +9,14 @@ class Reservation extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id',
+        'profile_id',
         'room_id',
         'reservation_code',
-        'amount',
+        'payment_method',
         'reservation_payment_proof_url',
         'status',  
         'approved_by',
-        'approval_date'
+        'approval_date',
     ];
 
     protected $casts = [

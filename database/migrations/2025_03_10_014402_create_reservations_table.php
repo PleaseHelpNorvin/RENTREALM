@@ -14,16 +14,14 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             // i am planning to put a reservation-code
-            $table->foreignId('picked_room_id')->constrained('picked_room')->onDelete('cascade');
+            $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
+            $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade');
             $table->string('reservation_code');
-            $table->decimal('amount', 10,2);
-            $table->integer('person_count')->default(1);
+            $table->String('payment_method');
             $table->json('reservation_payment_proof_url')->nullable();
             $table->enum('status', ['pending','confirmed'])->default('pending');
-            $table->enum('payment_status', ['unpaid','paid'])->default('unpaid');
-            $table->string('approved_by')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approval_date')->nullable();
-
             $table->timestamps();
         });
     }

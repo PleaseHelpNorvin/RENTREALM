@@ -33,9 +33,9 @@ class ReservationController extends Controller
 
     public function store(Request $request) {
         $validatedData = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'profile_id' => 'required|exists:users,id',
             'room_id' => 'required|exists:rooms,id',
-            'amount' => 'required|numeric|min:0',
+            'payment_method' => 'required|String|',
             'reservation_payment_proof_url' => 'required|array',
             'reservation_payment_proof_url.*' => 'file|mimes:png,jpeg,jpg|max:2048',
         ]);
@@ -55,9 +55,11 @@ class ReservationController extends Controller
             'user_id' => $validatedData['user_id'],
             'room_id' => $validatedData['room_id'],
             'reservation_code' => $reservationCode,
-            'amount' => $validatedData['amount'],
+            'amount' => $validatedData['payment_method'],
             'reservation_payment_proof_url' => json_encode($proofUrls),
             'status' => 'pending',
+            'approved_by' => $validatedData['approved_by'],
+            'approved_date' => updated_at
         ]);
 
         return $this->createdResponse($reservation, 'Reservation created successfully');
