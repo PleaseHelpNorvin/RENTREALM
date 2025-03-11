@@ -69,4 +69,20 @@ class PickedRoomController extends Controller
             return $this->errorResponse(null, $e->errors());
         }
     }
+
+    public function destroy($id)
+    {
+        // Find the picked room by ID
+        $pickedRoom = PickedRoom::find($id);
+
+        // If picked room not found, return an error response
+        if (!$pickedRoom) {
+            return $this->notFoundResponse(null, "Picked Room not found");
+        }
+
+        // Delete the picked room record from the database
+        $pickedRoom->delete();
+
+        return $this->successResponse((object)[], "Picked Room deleted successfully");
+    }
 }

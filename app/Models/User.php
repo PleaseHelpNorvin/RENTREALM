@@ -87,4 +87,9 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(Reservation::class, PickedRoom::class);
     }
+
+    public function approvedBy()
+    {
+        return $this->hasMany(Reservation::class, 'approved_by');
+    }
 }

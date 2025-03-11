@@ -60,6 +60,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [PickedRoomController::class, 'index']);
         Route::get('getRoomsByUser/{userId}', [PickedRoomController::class, 'getRoomsByUser']);
         Route::post('addRoomForUser', [PickedRoomController::class, 'addRoomForUser']);
+        Route::delete('destroy/{pickedroom_id}', [PickedRoomController::class, 'destroy']);
+    });
+
+    Route::prefix('reservation')->group(function() {
+        Route::get('index',[ReservationController::class, 'index']);
+        Route::post('store',[ReservationController::class, 'store']);
     });
 
     Route::prefix('rental_agreement')->group(function(){
@@ -67,8 +73,6 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store', [RentalAgreementController::class, 'store']);
         Route::get('show/{id}', [RentalAgreementController::class, 'show']);
         Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
-
-
     });
 
     Route::prefix('property')->group(function () {

@@ -29,8 +29,13 @@ class Reservation extends Model
     {
         return $this->belongsTo(PickedRoom::class);
     }
-    public function user_id()
+    public function userProfile()
     {
-        return $this->belongsTo(profile::class, 'user_id');
+        return $this->belongsTo(UserProfile::class, 'profile_id');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(user::class, 'approved_by');
     }
 }

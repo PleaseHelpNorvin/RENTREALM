@@ -16,13 +16,15 @@ class ReservationController extends Controller
         $reservations = $reservations->map(function ($reservation) {
             return [
                 'id' => $reservation->id,
-                'user_id' => $reservation->user_id,
+                'profile_id' => $reservation->profile_id,
                 'room_id' => $reservation->room_id,
-                'amount' => $reservation->amount,
+                'payment_method' => $reservation->payment_method,
                 'reservation_payment_proof_url' => collect(json_decode($reservation->reservation_payment_proof_url))->map(function ($url) {
                     return asset("storage/{$url}");
                 })->toArray(),
                 'status' => $reservation->status,
+                'approved_by' => $reservation->approved_by,
+                'approval_date' => $reservation->approval_date,
                 'created_at' => $reservation->created_at,
                 'updated_at' => $reservation->updated_at,
             ];
@@ -33,7 +35,7 @@ class ReservationController extends Controller
 
     public function store(Request $request) {
         $validatedData = $request->validate([
-            'profile_id' => 'required|exists:users,id',
+            'profile_id' => 'required|exists:user_profiles,id',
             'room_id' => 'required|exists:rooms,id',
             'payment_method' => 'required|String|',
             'reservation_payment_proof_url' => 'required|array',
@@ -46,22 +48,22 @@ class ReservationController extends Controller
         $proofUrls = [];
         if ($request->hasFile('reservation_payment_proof_url')) {
             foreach ($request->file('reservation_payment_proof_url') as $file) {
-                $proofUrls[] = $file->store('payment_proofs', 'public');
+                $proofUrls[] = $file->store('reservation_payment_proofs', 'public');
             }
         }
 
         // Save the reservation
         $reservation = Reservation::create([
-            'user_id' => $validatedData['user_id'],
+            'profile_id' => $validatedData['profile_id'],
             'room_id' => $validatedData['room_id'],
             'reservation_code' => $reservationCode,
-            'amount' => $validatedData['payment_method'],
+            'payment_method' => $validatedData['payment_method'],
             'reservation_payment_proof_url' => json_encode($proofUrls),
             'status' => 'pending',
-            'approved_by' => $validatedData['approved_by'],
-            'approved_date' => updated_at
         ]);
 
         return $this->createdResponse($reservation, 'Reservation created successfully');
     }
+
+    
 }
