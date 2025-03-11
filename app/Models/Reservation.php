@@ -38,4 +38,10 @@ class Reservation extends Model
     {
         return $this->belongsTo(user::class, 'approved_by');
     }
+
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable'); 
+    }
+
 }

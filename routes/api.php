@@ -68,6 +68,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store',[ReservationController::class, 'store']);
     });
 
+    Route::prefix('notification')->group(function() {
+        Route::get('index/{user_id}', [NotificationController::class,'index']);
+    });
+
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
         Route::post('store', [RentalAgreementController::class, 'store']);
@@ -122,6 +126,11 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [RoomController::class, 'update']);
         Route::delete('destroy/{id}', [RoomController::class, 'destroy']);
     });
+    Route::prefix('reservation')->group(function() {
+        Route::get('index',[ReservationController::class, 'index']);
+        Route::patch('updateStatus/{id}',[ReservationController::class, 'updateStatus']);
+        Route::get('show/{id}',[ReservationController::class,'show']);
+    });
 
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
@@ -129,12 +138,12 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
     });
-    Route::prefix('inquiry')->group(function () {
-        Route::post('store', [InquiryController::class, 'store']);
-        Route::get('index', [InquiryController::class, 'index']);
-        Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
-        Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
-    });
+    // Route::prefix('inquiry')->group(function () {
+    //     Route::post('store', [InquiryController::class, 'store']);
+    //     Route::get('index', [InquiryController::class, 'index']);
+    //     Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
+    //     Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
+    // });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

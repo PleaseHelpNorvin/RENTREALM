@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\rest;
 
+use App\Models\Notification;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -62,8 +63,58 @@ class ReservationController extends Controller
             'status' => 'pending',
         ]);
 
+        $reservation->notifications()->create([
+            'user_id' => $reservation->userProfile->user->id,
+            'title' => 'Your Reservation is being reviewed by the admins',
+            'message' => 'Please wait for possible call from management. Also, check your notification for your reservation updates.',
+            'is_read' => false
+        ]);
+
         return $this->createdResponse($reservation, 'Reservation created successfully');
     }
 
+    public function updateStatus(Request $request, $id) {
+
+        $reservation = Reservation::find($id);
     
+        if (!$reservation) {
+            return $this->notFoundResponse(null, "Reservation Not Found");
+        }
+    
+        // Manually retrieve data instead of expecting JSON
+        $validatedData = $request->validate([
+            'status' => 'required|in:pending,confirmed',
+            'approved_by' => 'required|exists:users,id',
+        ]);
+    
+        $reservation->update([
+            'status' => $validatedData['status'],
+            'approved_by' => $validatedData['approved_by'],
+            'approval_date' => now(),
+        ]);
+
+        $reservation->notifications()->create([
+            'user_id' => $reservation->userProfile->user->id,
+            'title' => 'Your Reservation is being reviewed by the admins',
+            'message' => 'Please wait for possible call from management. Also, check your notification for your reservation updates.',
+            'is_read' => false
+        ]);
+    
+        return $this->successResponse(['reservation' => $reservation], 'Reservation status updated successfully');
+        // use something like for this endpoint
+        // method: patch
+        // http://127.0.0.1:8000/api/landlord/reservation/updateStatus/1?status=confirmed&approved_by=1
+    }
+
+    public function show($id) {
+        $reservation = Reservation::find($id);
+        
+        if (!$reservation) {
+            return $this->notFoundResponse(null, "Reservation Not Found");
+        }
+    
+        return $this->successResponse(['reservation' => [$reservation]], 'Reservation retrieved successfully');
+    }
+    
+                
 }
