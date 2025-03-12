@@ -40,7 +40,7 @@ class RentalAgreementController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'inquiry_id' => 'required|exists:inquiries,id', 
+            'reservation_id' => 'required|exists:inquiries,id', 
             'rent_start_date' => 'required|date',  
             'rent_end_date' => 'nullable|date',  
             'person_count' => 'required|integer|min:1',

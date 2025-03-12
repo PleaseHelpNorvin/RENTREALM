@@ -11,7 +11,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'profile_id',
-        'room_id',
+        // 'room_id',
         'rental_agreement_id',
         'payment_status',
         'status',
