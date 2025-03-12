@@ -66,10 +66,15 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('reservation')->group(function() {
         Route::get('index',[ReservationController::class, 'index']);
         Route::post('store',[ReservationController::class, 'store']);
+        Route::get('show/{id}',[ReservationController::class,'show']);
+
     });
 
     Route::prefix('notification')->group(function() {
         Route::get('index/{user_id}', [NotificationController::class,'index']);
+        Route::patch('updateIsRead/{notif_id}',[NotificationController::class, 'updateIsRead']);
+        Route::get('show/{id}',[ReservationController::class,'show']);
+
     });
 
     Route::prefix('rental_agreement')->group(function(){

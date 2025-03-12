@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\rest;
 
-use App\Models\Notification;
+use App\Models\User;
 use App\Models\Reservation;
+use Illuminate\Support\Str;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Str;
 
 
 class ReservationController extends Controller
@@ -83,7 +84,7 @@ class ReservationController extends Controller
     
         // Manually retrieve data instead of expecting JSON
         $validatedData = $request->validate([
-            'status' => 'required|in:pending,confirmed',
+            'status' => 'required|in:pending,approved',
             'approved_by' => 'required|exists:users,id',
         ]);
     
@@ -93,10 +94,15 @@ class ReservationController extends Controller
             'approval_date' => now(),
         ]);
 
+        $adminId = $reservation->approved_by;
+        $adminName = User::find($adminId)->name;
+        
+        $clientId = $reservation->userProfile->user_id;
+        $createdAt = $reservation->created_at;
         $reservation->notifications()->create([
-            'user_id' => $reservation->userProfile->user->id,
-            'title' => 'Your Reservation is being reviewed by the admins',
-            'message' => 'Please wait for possible call from management. Also, check your notification for your reservation updates.',
+            'user_id' => $clientId,
+            'title' => "Reservation Accepted!",
+            'message' => "Your Reservation on $createdAt has been accepted. Please Proceed to the commitment agreement signing alongside with the rental payment.",
             'is_read' => false
         ]);
     
@@ -113,7 +119,7 @@ class ReservationController extends Controller
             return $this->notFoundResponse(null, "Reservation Not Found");
         }
     
-        return $this->successResponse(['reservation' => [$reservation]], 'Reservation retrieved successfully');
+        return $this->successResponse(['reservations' => [$reservation]], 'Reservation retrieved successfully');
     }
     
                 

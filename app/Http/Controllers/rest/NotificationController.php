@@ -36,18 +36,18 @@ class NotificationController extends Controller
         return $this->successResponse(['notifications' => [$unreadNotifications]], "Unread notifications found for User $user_id.");
     }
 
-    public function indexRead($user_id)
-    {
-        $readNotifications = Notification::where('user_id', $user_id)
-            ->where('is_read', true)
-            ->get();
+    // public function indexRead($user_id)
+    // {
+    //     $readNotifications = Notification::where('user_id', $user_id)
+    //         ->where('is_read', true)
+    //         ->get();
 
-        if ($readNotifications->isEmpty()) {
-            return $this->notFoundResponse(null, "No read notifications found for User $user_id.");
-        }
+    //     if ($readNotifications->isEmpty()) {
+    //         return $this->notFoundResponse(null, "No read notifications found for User $user_id.");
+    //     }
 
-        return $this->successResponse(['notifications' => [$readNotifications]], "Read notifications found for User $user_id.");
-    }
+    //     return $this->successResponse(['notifications' => [$readNotifications]], "Read notifications found for User $user_id.");
+    // }
 
 
     public function show($id)

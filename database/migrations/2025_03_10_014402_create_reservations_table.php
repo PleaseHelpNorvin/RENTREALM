@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('reservation_code');
             $table->String('payment_method');
             $table->json('reservation_payment_proof_url')->nullable();
-            $table->enum('status', ['pending','confirmed'])->default('pending');
+            $table->enum('status', ['pending','approved'])->default('pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approval_date')->nullable();
             $table->timestamps();
