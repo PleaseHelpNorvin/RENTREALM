@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('billings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
-            $table->string('description')->nullable();
-            $table->decimal('amount_due', 10, 2);
-            $table->enum('status', ['pending', 'paid', 'overdue'])->default('pending');
-            $table->date('next_payment_date')->nullable();
+            $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade'); // Tenant being billed
+            $table->morphs('billable'); // Links to reservation, rental agreement, etc.
+            $table->decimal('total_amount', 10, 2); // Total amount due
+            $table->decimal('amount_paid', 10, 2)->default(0.00); // Amount paid
+            $table->decimal('remaining_balance', 10, 2)->default(0.00); // Amount left unpaid
+            $table->date('billing_month'); // Billing date (e.g., monthly rent)
+            $table->enum('status', ['pending', 'partial', 'paid'])->default('pending'); // Billing status
             $table->timestamps();
         });
 

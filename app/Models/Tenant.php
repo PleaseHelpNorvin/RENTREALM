@@ -13,9 +13,7 @@ class Tenant extends Model
         'profile_id',
         // 'room_id',
         'rental_agreement_id',
-        'payment_status',
         'status',
-        'next_payment_date',
         'evacuation_date',
         'move_out_date',
     ];

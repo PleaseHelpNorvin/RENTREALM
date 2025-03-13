@@ -8,6 +8,7 @@ use App\Http\Controllers\rest\UserController;
 use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\InquiryController;
+use App\Http\Controllers\rest\PaymentController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\PickedRoomController;
 use App\Http\Controllers\rest\ReservationController;
@@ -70,6 +71,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     });
 
+    Route::prefix('payment')->group(function() {
+        Route::post('storepayment', [PaymentController::class, 'storePayment']);
+    });
+
     Route::prefix('notification')->group(function() {
         Route::get('index/{user_id}', [NotificationController::class,'index']);
         Route::patch('updateIsRead/{notif_id}',[NotificationController::class, 'updateIsRead']);
@@ -95,7 +100,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('rental_agreement')->group(function () {
         Route::get('index', [RentalAgreementController::class,'index']);
-        Route::post('store', [RentalAgreementController::class, 'store']);
+        Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
     });
 
 

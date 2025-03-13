@@ -48,4 +48,6 @@ class UserProfile extends Model
     {
         return $this->hasMany(Reservation::class, 'profile_id');
     }
+
+    
 }

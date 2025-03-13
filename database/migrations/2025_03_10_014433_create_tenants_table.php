@@ -16,7 +16,7 @@ return new class extends Migration
             // Foreign keys
             $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
             $table->foreignId('rental_agreement_id')->constrained('rental_agreements')->onDelete('cascade');
-            $table->enum('status', ['active', 'inactive', 'evicted', 'moved_out'])->default('active');
+            $table->enum('status', ['pending','active','moved_out'])->default('pending');
 
             // Evacuation status info             
             $table->date('evacuation_date')->nullable();

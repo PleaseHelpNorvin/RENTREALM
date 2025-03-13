@@ -44,4 +44,9 @@ class Reservation extends Model
         return $this->morphMany(Notification::class, 'notifiable'); 
     }
 
+    public function rentalAgreement()
+    {
+        return $this->hasOne(RentalAgreement::class, 'reservation_id'); // One reservation has one rental agreement
+    }
+
 }

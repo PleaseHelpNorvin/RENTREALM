@@ -25,8 +25,10 @@ return new class extends Migration
             $table->date('rent_end_date')->nullable();
             
             $table->integer('person_count')->nullable();
-            // $table->decimal('total_monthly_due', 10, 2);
+            $table->decimal('total_amount', 10, 2);
             
+            // $table->boolean('advance_payment');
+
             $table->longText('description')->nullable();
             $table->string('signature_png_string');
             
@@ -42,7 +44,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('rental_agreements');
     }
-    // for the next step: 
+        // for the next step: 
         // this table is a polymorphic payment table which is best to handle different type of payments 
         // (EX): reservation fees, security deposits, monthly rent, late fees, etc.) under one table.
         

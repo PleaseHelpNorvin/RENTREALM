@@ -37,14 +37,14 @@ class RentalAgreementController extends Controller
     }
     
 
-    public function store(Request $request)
+    public function store(Request $request, )
     {
         $validatedData = $request->validate([
-            'reservation_id' => 'required|exists:inquiries,id', 
+            'reservation_id' => 'required|exists:reservations,id', 
             'rent_start_date' => 'required|date',  
             'rent_end_date' => 'nullable|date',  
             'person_count' => 'required|integer|min:1',
-            'total_monthly_due' => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'signature_png_string' => 'required|file|mimes:png', // File validation
         ]);
@@ -82,7 +82,7 @@ class RentalAgreementController extends Controller
     }
         
     public function generatePdfContract(RentalAgreement $rentalAgreement)
-    {
+    {                                                                                 
         // Ensure the storage directory exists
         $directory = storage_path("app/public/rental_agreement_contracts");
         if (!file_exists($directory)) {
