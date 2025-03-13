@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('amount_paid', 10, 2); // Amount received
             $table->string('payment_method'); // e.g., GCash, Bank Transfer, Cash
             $table->string('payment_reference')->nullable(); // Transaction ID
-            $table->json('proof_url')->nullable(); // Store proof of payment
+            $table->json('payment_proof_url')->nullable(); // Store proof of payment
             $table->enum('status', ['pending', 'partial', 'paid'])->default('pending');
 
             $table->timestamps();
