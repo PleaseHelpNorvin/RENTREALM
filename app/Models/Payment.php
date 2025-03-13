@@ -16,7 +16,7 @@ class Payment extends Model
         'remaining_balance',
         'payment_method',
         'payment_reference',
-        'proof_url',
+        'payment_proof_url',
         'status',
         'billing_month',
     ];

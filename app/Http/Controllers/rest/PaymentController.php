@@ -25,13 +25,21 @@ class PaymentController extends Controller
             'amount_paid' => 'required|numeric|min:1', // Ensure it's a number and at least 1
             'payment_method' => 'required|string|max:255',
             'payment_reference' => 'nullable|string|max:255',
-            'proof_url' => 'nullable|array', // Ensure it's an array (for multiple images)
-            'proof_url.*' => 'url', // Each proof must be a valid URL
+            'payment_proof_url' => 'sometimes|array', // Ensure it's an array (for multiple images)
+            'payment_proof_url.*' => 'file|mimes:png,jpeg,jpg|max:2048', // Each proof must be a valid URL
         ]);
     
         // 🔎 Find the billing record by ID (already validated)
         $billing = Billing::find($validated['billing_id']);
-    
+
+        $paymentProofsUrls = [];
+        if($request->hasFile('payment_proof_url')) {
+            foreach ($request->file('payment_proof_url') as $file) {
+                $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
+            }
+        }
+
+
         // 💰 Create the payment
         $payment = Payment::create([
             'billing_id' => $billing->id,
@@ -41,7 +49,7 @@ class PaymentController extends Controller
             'amount_paid' => $validated['amount_paid'],
             'payment_method' => $validated['payment_method'],
             'payment_reference' => $validated['payment_reference'],
-            'proof_url' => json_encode($validated['proof_url']),
+            'payment_proof_url' => json_encode($paymentProofsUrls),
             'status' => 'paid',
         ]);
     
