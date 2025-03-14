@@ -23,11 +23,11 @@ class PaymentController extends Controller
 
     public function processPayment(Request $request)
     {
-        $validatedData = $request->validate([
-            'billing_id' => 'required|string',
-            'amount' => 'required|numeric',
-            'description' => 'required|string',
-        ]);
+        // $validatedData = $request->validate([
+        //     'billing_id' => 'required|string',
+        //     'amount' => 'required|numeric',
+        //     'description' => 'required|string',
+        // ]);
 
         
         $data = [
@@ -66,7 +66,7 @@ class PaymentController extends Controller
             $checkoutSession = $response->json();
     
             // Redirect user to checkout page (PayMongo checkout)
-            return redirect($checkoutSession['data']['attributes']['checkout_url']);
+            return $this->successResponse(['checkout_url' => $checkoutSession['data']['attributes']['checkout_url'],'checkout url test']);
         } else {
             // Log the error response for debugging
             return $this->errorResponse($response->json(), 'Payment processing failed');
