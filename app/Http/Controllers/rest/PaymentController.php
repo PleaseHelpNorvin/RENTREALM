@@ -4,10 +4,12 @@ namespace App\Http\Controllers\rest;
 
 use App\Models\Tenant;
 use App\Models\Billing;
+use GuzzleHttp\Client;
 use App\Models\Payment;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
@@ -16,81 +18,131 @@ class PaymentController extends Controller
         $payments = Payments::get();
         return $this->successResponse(['payments' => $payments], "fetched payments");
     }
-
-    public function storePayment(Request $request)
-    {
-        // ✅ Validate request
-        $validated = $request->validate([
-            'billing_id' => 'required|exists:billings,id',
-            'amount_paid' => 'required|numeric|min:1', // Ensure it's a number and at least 1
-            'payment_method' => 'required|string|max:255',
-            'payment_reference' => 'nullable|string|max:255',
-            'payment_proof_url' => 'sometimes|array', // Ensure it's an array (for multiple images)
-            'payment_proof_url.*' => 'file|mimes:png,jpeg,jpg|max:2048', // Each proof must be a valid URL
-        ]);
     
-        // 🔎 Find the billing record by ID (already validated)
-        $billing = Billing::find($validated['billing_id']);
+    
 
+    public function processPayment(Request $request)
+    {
+        $validatedData = $request->validate([
+            'billing_id' => 'required|string',
+            'amount' => 'required|numeric',
+            'description' => 'required|string',
+        ]);
+
+        
+        $data = [
+            'data' => [
+                'attributes' => [
+                    'line_items' => [
+                        [
+                            'currency' => 'PHP',
+                            'amount' => 100000,
+                            'description' => 'text',
+                            'name' => 'test name',
+                            'quantity' => 1,
+                        ]
+                    ],
+                    'payment_method_types' => [ // Correct placement of this field
+                        'card', 'gcash'
+                    ],
+                    'success_url' => 'http://localhost:8000',
+                    'cancel_url' => 'http://localhost:8000',
+                    'description' => 'text',
+                ],
+            ],
+        ];
+    
+        // Make the API request
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Basic ' . base64_encode(env('PAYMONGO_SECRET_KEY')),
+        ])
+        ->withoutVerifying()
+        ->post('https://api.paymongo.com/v1/checkout_sessions', $data);
+    
+        // Check for a successful response
+        if ($response->successful()) {
+            // Extract checkout session URL or other relevant data
+            $checkoutSession = $response->json();
+    
+            // Redirect user to checkout page (PayMongo checkout)
+            return redirect($checkoutSession['data']['attributes']['checkout_url']);
+        } else {
+            // Log the error response for debugging
+            return $this->errorResponse($response->json(), 'Payment processing failed');
+        }
+    }
+            
+        // return $this->storePaymentAfterPayMongo($billingId, $amount, 'GCash', $paymentReference, null);
+
+    private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymentReference, $paymentProofFiles)
+    {
+        // 🔎 Find the billing record
+        $billing = Billing::find($billingId);
+        if (!$billing) {
+            return response()->json(['message' => 'Billing not found'], 404);
+        }
+
+        // ✅ Fix: Prevent error if no files are uploaded
         $paymentProofsUrls = [];
-        if($request->hasFile('payment_proof_url')) {
-            foreach ($request->file('payment_proof_url') as $file) {
+        if ($paymentProofFiles && is_array($paymentProofFiles)) {
+            foreach ($paymentProofFiles as $file) {
                 $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
             }
         }
 
-
-        // 💰 Create the payment
+        // 💰 Create Payment Record
         $payment = Payment::create([
             'billing_id' => $billing->id,
             'payable_id' => $billing->billable_id,
             'payable_type' => $billing->billable_type,
             'profile_id' => $billing->profile_id,
-            'amount_paid' => $validated['amount_paid'],
-            'payment_method' => $validated['payment_method'],
-            'payment_reference' => $validated['payment_reference'],
+            'amount_paid' => $amountPaid,
+            'payment_method' => $paymentMethod,
+            'payment_reference' => $paymentReference,
             'payment_proof_url' => json_encode($paymentProofsUrls),
             'status' => 'paid',
         ]);
-    
-        // 🏦 Update the Billing Record
-        $billing->amount_paid += $validated['amount_paid'];
+
+        // 🏦 Update Billing Record
+        $billing->amount_paid += $amountPaid;
         $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
-    
+        
         if ($billing->remaining_balance <= 0) {
             $billing->status = 'paid';
         } elseif ($billing->amount_paid > 0) {
             $billing->status = 'partial';
         }
-    
+
         $billing->save();
 
-
-        // 🏠 Create or Find Tenant
+        // 🏠 Create or Update Tenant
         $status = ($billing->status === 'paid') ? 'active' : 'pending';
 
-        $tenant = Tenant::firstOrCreate(
-            ['profile_id' => $billing->profile_id], // Find condition
-            [
+        // ✅ Fix: Check if Tenant already exists before creating a new one
+        $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
+        if ($tenant) {
+            $tenant->status = $status;
+            $tenant->save();
+        } else {
+            Tenant::create([
+                'profile_id' => $billing->profile_id,
                 'rental_agreement_id' => $billing->billable_id,
-                'status' => "$status", // ✅ Ensure it's a string
-            ]
-        );
+                'status' => $status,
+            ]);
+        }
 
         // 📢 Notify Tenant if Payment is Partial
         if ($billing->status === 'partial') {
-            $payment->notifications()->create([
+            Notification::create([
                 'user_id' => $billing->userProfile->user_id,
-                'title' => 'payment_reminder',
+                'title' => 'Payment Reminder',
                 'message' => 'Your payment is incomplete. Please complete your payment to avoid issues.',
                 'is_read' => 0,
             ]);
         }
 
-    
-        return $this->successResponse(['payment' => $payment], 'Payment stored successfully');
+        return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
     }
-        
-
 
 }

@@ -76,7 +76,7 @@ class RentalAgreementController extends Controller
         
         // Return success response immediately
         return $this->successResponse(
-            ['rentalAgreement' => $rentalAgreement], 
+            ['rentalAgreement' => [$rentalAgreement]], 
             "Rental agreement created successfully"
         );
     }

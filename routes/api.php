@@ -7,6 +7,7 @@ use App\Http\Controllers\rest\RoomController;
 use App\Http\Controllers\rest\UserController;
 use App\Http\Controllers\rest\TenantController;
 use App\Http\Controllers\rest\AddressController;
+use App\Http\Controllers\rest\BillingController;
 use App\Http\Controllers\rest\InquiryController;
 use App\Http\Controllers\rest\PaymentController;
 use App\Http\Controllers\rest\PropertyController;
@@ -41,6 +42,20 @@ Route::prefix('inquiry')->group(function(){
 });
 
 
+Route::post('/webhook/paymongo', function (Request $request) {
+    $payload = $request->json();
+
+    if ($payload['data']['attributes']['status'] === 'paid') {
+        $paymentId = $payload['data']['id'];
+
+        Payment::where('payment_reference', $paymentId)
+            ->update(['status' => 'paid']);
+    }
+
+    return response()->json(['message' => 'Webhook received'], 200);
+});
+
+
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function() {
@@ -71,8 +86,15 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
 
     });
 
+    Route::prefix('billing')->group(function() {
+        Route::get('index',[BillingController::class, 'index']);
+        Route::get('getbillingforrentalagreement/{rentalagreement_code}', [BillingController::class, 'getBillingForRentalAgreement']);
+    });
+
     Route::prefix('payment')->group(function() {
         Route::post('storepayment', [PaymentController::class, 'storePayment']);
+        Route::post('process-payment', [PaymentController::class, 'processPayment']);
+
     });
 
     Route::prefix('notification')->group(function() {
@@ -87,6 +109,8 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store', [RentalAgreementController::class, 'store']);
         Route::get('show/{id}', [RentalAgreementController::class, 'show']);
         Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
+        Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
+
     });
 
     Route::prefix('property')->group(function () {
@@ -98,10 +122,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
     });
 
-    Route::prefix('rental_agreement')->group(function () {
-        Route::get('index', [RentalAgreementController::class,'index']);
-        Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
-    });
+    // Route::prefix('rental_agreement')->group(function () {
+    //     Route::get('index', [RentalAgreementController::class,'index']);
+        // Route::get('show/{reservation_code}')
+    // });
 
 
     Route::prefix('tenant')->group(function() {
