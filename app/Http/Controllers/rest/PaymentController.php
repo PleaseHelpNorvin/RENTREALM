@@ -26,7 +26,6 @@ class PaymentController extends Controller
         $validatedData = $request->validate([
             'billing_id' => 'required|string',
             'amount' => 'required|numeric',
-            'description' => 'required|string',
             'payment_description' => 'required|string',
         ]);
 
@@ -52,7 +51,7 @@ class PaymentController extends Controller
                         [
                             'currency' => 'PHP',
                             'amount' => (int) ($validatedData['amount'] * 100),
-                            'description' =>  $validatedData['description'],
+                            'description' =>  $validatedData['payment_description'],
                             'name' => $userName,
                             'quantity' => 1,
                         ]
