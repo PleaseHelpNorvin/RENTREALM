@@ -27,8 +27,23 @@ class PaymentController extends Controller
             'billing_id' => 'required|string',
             'amount' => 'required|numeric',
             'description' => 'required|string',
+            'payment_description' => 'required|string',
         ]);
 
+        $billing = Billing::where('id', $validatedData['billing_id'])->first();
+
+        if (!$billing) {
+            return response()->json(['error' => 'Billing record not found'], 404);
+        }
+    
+        $userProfile = $billing->userProfile;
+    
+        if (!$userProfile) {
+            return response()->json(['error' => 'User profile not found'], 404);
+        }
+    
+        $userName = $userProfile->user->name ?? 'Unknown';
+    
         
         $data = [
             'data' => [
@@ -36,9 +51,9 @@ class PaymentController extends Controller
                     'line_items' => [
                         [
                             'currency' => 'PHP',
-                            'amount' => 100000,
-                            'description' => 'text',
-                            'name' => 'test name',
+                            'amount' => (int) ($validatedData['amount'] * 100),
+                            'description' =>  $validatedData['description'],
+                            'name' => $userName,
                             'quantity' => 1,
                         ]
                     ],
@@ -47,7 +62,7 @@ class PaymentController extends Controller
                     ],
                     'success_url' => 'http://localhost:8000',
                     'cancel_url' => 'http://localhost:8000',
-                    'description' => 'text',
+                    'description' => $validatedData['payment_description'],
                 ],
             ],
         ];
@@ -55,8 +70,9 @@ class PaymentController extends Controller
         // Make the API request
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-            'Authorization' => 'Basic ' . base64_encode(env('PAYMONGO_SECRET_KEY')),
-        ])
+            // 'Authorization' => 'Basic ' . base64_encode(env('PAYMONGO_SECRET_KEY') . ':'),
+            'Authorization' => 'Basic ' . base64_encode('sk_test_ApQQerjP8y1vNkvXUYwwf4P7' . ':'),
+            ])
         ->withoutVerifying()
         ->post('https://api.paymongo.com/v1/checkout_sessions', $data);
     
@@ -64,12 +80,20 @@ class PaymentController extends Controller
         if ($response->successful()) {
             // Extract checkout session URL or other relevant data
             $checkoutSession = $response->json();
-    
+            
             // Redirect user to checkout page (PayMongo checkout)
-            return redirect($checkoutSession['data']['attributes']['checkout_url']);
+            // return redirect($checkoutSession['data']['attributes']['checkout_url']);
+            return $this->successResponse([
+                'checkout_url' => $checkoutSession['data']['attributes']['checkout_url']
+            ], 'Payment session created successfully');
         } else {
             // Log the error response for debugging
-            return $this->errorResponse($response->json(), 'Payment processing failed');
+            return $this->errorResponse(
+                $response->json()['errors'] ?? [],
+                'Payment processing failed',
+                $response->status()
+            );
+
         }
     }
             
