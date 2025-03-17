@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\rest;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\UserProfile;
 use App\Models\Address;
+use App\Models\UserProfile;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 
 class UserProfileController extends Controller
@@ -65,56 +66,47 @@ class UserProfileController extends Controller
     /**
      * Store a newly created user profile in storage.
      */
-    public function store(Request $request, $user_id)
-    {
-        \Log::info($request->all());  // Log all incoming data
+    public function store(Request $request)
+{
+    $user = auth()->user();
+    Log::info('Authenticated user:', ['id' => $user->id]);  
     
-        // Validate the input data
-        $validated = $request->validate([
-            'phone_number' => 'nullable|string|max:255',
-            'social_media_links' => 'nullable|string|max:255',
-            'occupation' => 'nullable|string|max:255',
-            // address part
-            'line_1' => 'nullable|string|max:100',
-            'line_2' => 'nullable|string|max:100',
-            'province' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'postal_code' => 'nullable|string|max:20',
-            // id parts
-            'driver_license_number' => 'nullable|string|max:255',
-            'national_id' => 'nullable|string|max:255',
-            'passport_number' => 'nullable|string|max:255',
-            'social_security_number' => 'nullable|string|max:255',
-        ]);
-    
-        // Check if the profile already exists based on unique fields like phone_number or social_media_links
-        $existingProfile = UserProfile::where('phone_number', $validated['phone_number'])
-                                      ->orWhere('social_media_links', $validated['social_media_links'])
-                                      ->first();
-    
-        if ($existingProfile) {
-            return $this->successResponse(['profile' => $existingProfile], 'Duplicate profile detected.', 409); // Conflict response
-        }
-    
-        // Create or update the profile
-        $profile = UserProfile::updateOrCreate(
-            ['user_id' => $user_id],
-            [
-                'phone_number' => $validated['phone_number'] ?? null,
-                'social_media_links' => $validated['social_media_links'] ?? null,
-                'occupation' => $validated['occupation'] ?? null,
-                'driver_license_number' => $validated['driver_license_number'] ?? null,
-                'national_id' => $validated['national_id'] ?? null,
-                'passport_number' => $validated['passport_number'] ?? null,
-                'social_security_number' => $validated['social_security_number'] ?? null,
-            ]
-        );
-        
-        $fullAddress = "{$validated['line_1']}, {$validated['line_2']}, {$validated['province']}, {$validated['country']}, {$validated['postal_code']}";
-        $coordinates = Address::getCoordinates($fullAddress);
+    // Validate input data
+    $validated = $request->validate([
+        'phone_number' => 'nullable|string|max:255',
+        'social_media_links' => 'nullable|string|max:255',
+        'occupation' => 'nullable|string|max:255',
+        'line_1' => 'nullable|string|max:100',
+        'line_2' => 'nullable|string|max:100',
+        'province' => 'nullable|string|max:255',
+        'country' => 'nullable|string|max:255',
+        'postal_code' => 'nullable|string|max:20',
+        'driver_license_number' => 'nullable|string|max:255',
+        'national_id' => 'nullable|string|max:255',
+        'passport_number' => 'nullable|string|max:255',
+        'social_security_number' => 'nullable|string|max:255',
+    ]);
 
-        // Associate the address with the profile using polymorphic relationship
-        $profile->address()->create([
+    // Ensure the profile belongs to the authenticated user
+    $profile = UserProfile::updateOrCreate(
+        ['user_id' => $user->id], // Use the authenticated user's ID
+        [
+            'phone_number' => $validated['phone_number'] ?? null,
+            'social_media_links' => $validated['social_media_links'] ?? null,
+            'occupation' => $validated['occupation'] ?? null,
+            'driver_license_number' => $validated['driver_license_number'] ?? null,
+            'national_id' => $validated['national_id'] ?? null,
+            'passport_number' => $validated['passport_number'] ?? null,
+            'social_security_number' => $validated['social_security_number'] ?? null,
+        ]
+    );
+
+    $fullAddress = "{$validated['line_1']}, {$validated['line_2']}, {$validated['province']}, {$validated['country']}, {$validated['postal_code']}";
+    $coordinates = Address::getCoordinates($fullAddress);
+
+    $profile->address()->updateOrCreate(
+        ['id' => $profile->id], // Ensure address is linked to the correct profile
+        [
             'line_1' => $validated['line_1'] ?? null,
             'line_2' => $validated['line_2'] ?? null,
             'province' => $validated['province'] ?? null,
@@ -122,10 +114,12 @@ class UserProfileController extends Controller
             'postal_code' => $validated['postal_code'] ?? null,
             'latitude' => $coordinates['latitude'] ?? null,
             'longitude' => $coordinates['longitude'] ?? null,
-        ]);
-    
-        return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
-    }
+        ]
+    );
+
+    return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
+}
+
             
 
     /**

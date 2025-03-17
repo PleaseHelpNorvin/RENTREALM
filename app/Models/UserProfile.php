@@ -41,7 +41,7 @@ class UserProfile extends Model
 
     public function tenant()
     {
-        return $this->BelongsTo(Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     public function reservations() 

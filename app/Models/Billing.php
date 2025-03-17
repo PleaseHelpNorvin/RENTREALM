@@ -18,6 +18,7 @@ class Billing extends Model
         'remaining_balance',
         'billing_month',
         'status',
+        'checkout_session_id',
     ];
 
     protected $casts = [
