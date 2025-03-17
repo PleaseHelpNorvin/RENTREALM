@@ -10,6 +10,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -84,7 +85,7 @@ class PaymentController extends Controller
             $checkoutSessionId = $checkoutSession['data']['id'] ?? null;
             // Extract Reference Number (if available)
             $billing->update(['checkout_session_id' => $checkoutSessionId]);
-
+                
             return $this->successResponse([
                 'checkout_url' => $checkoutUrl,
             ]);
@@ -99,43 +100,90 @@ class PaymentController extends Controller
         }
     }
 
-    public function handleWebhook(Request $request)
+    public function retrievePayment($billingId)
     {
-        $payload = $request->all();
+        Log::info("Retrieving payment for billing ID: {$billingId}");
     
-        if (isset($payload['data']['attributes'])) {
-            $attributes = $payload['data']['attributes'];
+        // Find the billing record with the stored checkout_session_id
+        $billing = Billing::where('id', $billingId)->first();
     
-            // Extract checkout_session_id from webhook
-            $checkoutSessionId = $payload['data']['id'] ?? null;
-            $amount = $attributes['amount'] / 100; // Convert cents to PHP
-            $paymentMethod = $attributes['payment_method_type'] ?? 'unknown';
-            $referenceNumber = $attributes['reference_number'] ?? null;
-    
-            // 🔥 Retrieve the Billing record using checkout_session_id
-            $billing = Billing::where('checkout_session_id', $checkoutSessionId)->first();
-    
-            if ($billing) {
-                // Call the function to store the payment
-                $this->storePaymentAfterPayMongo(
-                    $billing->id,
-                    $amount,
-                    $paymentMethod,
-                    $referenceNumber,
-                    null
-                );
-    
-                return response()->json(['message' => 'Payment processed successfully'], 200);
-            }
+        if (!$billing || !$billing->checkout_session_id) {
+            Log::error("Billing record not found or checkout_session_id missing for billing ID: {$billingId}");
+            return response()->json(['error' => 'Billing record or checkout session ID not found'], 404);
         }
     
-        return response()->json(['message' => 'Unhandled event'], 400);
+        $checkoutSessionId = $billing->checkout_session_id;
+        Log::info("Found checkout_session_id: {$checkoutSessionId} for billing ID: {$billingId}");
+    
+        // Make a request to PayMongo API to get the session details
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode('sk_test_ApQQerjP8y1vNkvXUYwwf4P7' . ':'),
+            ])->withoutVerifying()
+            ->get("https://api.paymongo.com/v1/checkout_sessions/$checkoutSessionId");
+    
+            Log::info("PayMongo API request sent. Response status: " . $response->status());
+    
+            if ($response->successful()) {
+                $sessionData = $response->json();
+                Log::info("PayMongo API response received", ['response' => $sessionData]);
+    
+                // Extract payment details
+                $payments = $sessionData['data']['attributes']['payments'] ?? [];
+    
+                if (empty($payments)) {
+                    Log::warning("No payments found for checkout session ID: {$checkoutSessionId}");
+                    return response()->json(['message' => 'Payment is still pending'], 200);
+                }
+    
+                // Assuming there's only one payment associated
+                $paymentId = $payments[0]['id'] ?? null;
+                $paymentStatus = $payments[0]['attributes']['status'] ?? null;
+                $paymentReference = $payments[0]['attributes']['reference_number'] ?? null;
+    
+                Log::info("Payment retrieved successfully", [
+                    'payment_id' => $paymentId,
+                    'status' => $paymentStatus,
+                    'reference_number' => $paymentReference
+                ]);
+    
+                return response()->json([
+                    'payment_id' => $paymentId,
+                    'status' => $paymentStatus,
+                    'reference_number' => $paymentReference,
+                ]);
+            } else {
+                Log::error("PayMongo API request failed", [
+                    'status' => $response->status(),
+                    'response' => $response->json()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception occurred while retrieving payment: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    
+        return response()->json(['error' => 'Failed to retrieve payment details'], 500);
     }
             
         // return $this->storePaymentAfterPayMongo($billingId, $amount, 'GCash', $paymentReference, null);
 
     private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymentReference, $paymentProofFiles)
     {
+
+        try {
+            Log::info('storePaymentAfterPayMongo called with:', [
+                'billingId' => $billingId,
+                'amountPaid' => $amountPaid,
+                'paymentMethod' => $paymentMethod,
+                'paymentReference' => $paymentReference,
+                'paymentProofFiles' => $paymentProofFiles
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Logging failed: ' . $e->getMessage());
+        }
         // // 🔎 Find the billing record
         // $billing = Billing::find($billingId);
         // if (!$billing) {

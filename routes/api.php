@@ -18,7 +18,9 @@ use App\Http\Controllers\rest\NotificationController;
 use App\Http\Controllers\rest\RentalAgreementController;
 
 
+Route::post('/register-webhook', [PaymentController::class, 'registerWebhook']);
 
+Route::post('/webhook-handler', [PaymentController::class, 'handleWebhook']);
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);
@@ -42,18 +44,18 @@ Route::prefix('inquiry')->group(function(){
 });
 
 
-Route::post('/webhook/paymongo', function (Request $request) {
-    $payload = $request->json();
+// Route::post('/webhook/paymongo', function (Request $request) {
+//     $payload = $request->json();
 
-    if ($payload['data']['attributes']['status'] === 'paid') {
-        $paymentId = $payload['data']['id'];
+//     if ($payload['data']['attributes']['status'] === 'paid') {
+//         $paymentId = $payload['data']['id'];
 
-        Payment::where('payment_reference', $paymentId)
-            ->update(['status' => 'paid']);
-    }
+//         Payment::where('payment_reference', $paymentId)
+//             ->update(['status' => 'paid']);
+//     }
 
-    return response()->json(['message' => 'Webhook received'], 200);
-});
+//     return response()->json(['message' => 'Webhook received'], 200);
+// });
 
 
 // Protected routes with 'api' prefix and Sanctum middleware
@@ -94,6 +96,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('payment')->group(function() {
         Route::post('storepayment', [PaymentController::class, 'storePayment']);
         Route::post('process-payment', [PaymentController::class, 'processPayment']);
+        Route::get('retrieve-payment/{billingId}', [PaymentController::class,'retrievePayment']);
 
     });
 

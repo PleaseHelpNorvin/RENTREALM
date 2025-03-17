@@ -15,7 +15,7 @@ class Payment extends Model
         'amount_paid',
         'remaining_balance',
         'payment_method',
-        'payment_reference',
+        'paymongo_payment_reference',
         'payment_proof_url',
         'status',
         'billing_month',
