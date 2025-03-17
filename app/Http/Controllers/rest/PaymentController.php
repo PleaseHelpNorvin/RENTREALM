@@ -15,7 +15,7 @@ class PaymentController extends Controller
 {
     //
     public function index() {
-        $payments = Payments::get();
+        $payments = Payment::get();
         return $this->successResponse(['payments' => $payments], "fetched payments");
     }
     
@@ -24,7 +24,7 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         $validatedData = $request->validate([
-            'billing_id' => 'required|string',
+            'billing_id' => 'required|numeric',
             'amount' => 'required|numeric',
             'payment_description' => 'required|string',
         ]);
@@ -102,35 +102,33 @@ class PaymentController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->all();
-
+    
         if (isset($payload['data']['attributes'])) {
             $attributes = $payload['data']['attributes'];
-
-            // Check if this is a successful payment event
-            if ($payload['data']['type'] === 'payment.paid') {
-                $referenceNumber = $attributes['reference_number'] ?? null;
-                $paymentId = $attributes['id'] ?? null;
-                $amount = $attributes['amount'] / 100; // Convert cents to PHP
-                $paymentMethod = $attributes['payment_method_type'] ?? 'unknown';
-
-                // Find the related billing record in your database
-                // $billing = Billing::where('payment_id', $paymentId)->first();
-
-                if ($billing) {
-                    // Call the storePaymentAfterPayMongo function
-                    $this->storePaymentAfterPayMongo(
-                        $billing->id,
-                        $amount,
-                        $paymentMethod,
-                        $referenceNumber,
-                        null // You can handle proof file separately if needed
-                    );
-
-                    return response()->json(['message' => 'Payment processed successfully', 'reference_number' => $referenceNumber], 200);
-                }
+    
+            // Extract checkout_session_id from webhook
+            $checkoutSessionId = $payload['data']['id'] ?? null;
+            $amount = $attributes['amount'] / 100; // Convert cents to PHP
+            $paymentMethod = $attributes['payment_method_type'] ?? 'unknown';
+            $referenceNumber = $attributes['reference_number'] ?? null;
+    
+            // 🔥 Retrieve the Billing record using checkout_session_id
+            $billing = Billing::where('checkout_session_id', $checkoutSessionId)->first();
+    
+            if ($billing) {
+                // Call the function to store the payment
+                $this->storePaymentAfterPayMongo(
+                    $billing->id,
+                    $amount,
+                    $paymentMethod,
+                    $referenceNumber,
+                    null
+                );
+    
+                return response()->json(['message' => 'Payment processed successfully'], 200);
             }
         }
-
+    
         return response()->json(['message' => 'Unhandled event'], 400);
     }
             
