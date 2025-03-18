@@ -18,7 +18,7 @@ class Payment extends Model
         'paymongo_payment_reference',
         'payment_proof_url',
         'status',
-        'billing_month',
+
     ];
 
     public function payable(): MorphTo

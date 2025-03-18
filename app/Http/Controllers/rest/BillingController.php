@@ -43,4 +43,15 @@ class BillingController extends Controller
 
         return $this->successResponse(['billings' => $billing], 'Billing records retrieved successfully');
     }
+
+    public function getBillingDetails($billingId)
+    {
+        $billing = Billing::find($billingId);
+    
+        if (!$billing) {
+            return $this->notFoundResponse(null, "No billing details found for ID: $billingId");
+        }
+    
+        return $this->successResponse(['billings' => [$billing]], "Billing details retrieved successfully.");
+    }
 }

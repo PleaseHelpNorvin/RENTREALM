@@ -85,7 +85,8 @@ class PaymentController extends Controller
             $checkoutSessionId = $checkoutSession['data']['id'] ?? null;
             // Extract Reference Number (if available)
             $billing->update(['checkout_session_id' => $checkoutSessionId]);
-                
+            // $this->retrievePayment($billing->id);
+
             return $this->successResponse([
                 'checkout_url' => $checkoutUrl,
             ]);
@@ -140,18 +141,29 @@ class PaymentController extends Controller
                 // Assuming there's only one payment associated
                 $paymentId = $payments[0]['id'] ?? null;
                 $paymentStatus = $payments[0]['attributes']['status'] ?? null;
-                $paymentReference = $payments[0]['attributes']['reference_number'] ?? null;
-    
+                $paymentReference = $payments[0]['attributes']['payment_od'] ?? null;
+                $amountPaid = $payments[0]['attributes']['amount'] ?? null;
+                // $paymentMethod = $payments[0]['attributes']['payment_method_type'] ?? null;
+                $paymentMethod = $response['data']['attributes']['payment_method_used'] ?? null;
+
                 Log::info("Payment retrieved successfully", [
                     'payment_id' => $paymentId,
                     'status' => $paymentStatus,
-                    'reference_number' => $paymentReference
+                    'reference_number' => $paymentId,
+                    'payment_method' => $paymentMethod
                 ]);
+
+                Log::info("======================================================");
+                  // Call storePaymentAfterPayMongo() on success
+                if ($paymentStatus === 'paid') {
+                    $this->storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymentId, []);
+                }
     
                 return response()->json([
                     'payment_id' => $paymentId,
                     'status' => $paymentStatus,
-                    'reference_number' => $paymentReference,
+                    'paymongo_payment_number' => $paymentId,
+                    ''
                 ]);
             } else {
                 Log::error("PayMongo API request failed", [
@@ -170,7 +182,7 @@ class PaymentController extends Controller
             
         // return $this->storePaymentAfterPayMongo($billingId, $amount, 'GCash', $paymentReference, null);
 
-    private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymentReference, $paymentProofFiles)
+    private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
     {
 
         try {
@@ -178,78 +190,78 @@ class PaymentController extends Controller
                 'billingId' => $billingId,
                 'amountPaid' => $amountPaid,
                 'paymentMethod' => $paymentMethod,
-                'paymentReference' => $paymentReference,
+                'paymentReference' => $paymongoPaymentRef,
                 'paymentProofFiles' => $paymentProofFiles
             ]);
         } catch (\Exception $e) {
             Log::error('Logging failed: ' . $e->getMessage());
         }
-        // // 🔎 Find the billing record
-        // $billing = Billing::find($billingId);
-        // if (!$billing) {
-        //     return response()->json(['message' => 'Billing not found'], 404);
-        // }
+        // 🔎 Find the billing record
+        $billing = Billing::find($billingId);
+        if (!$billing) {
+            return response()->json(['message' => 'Billing not found'], 404);
+        }
 
-        // // ✅ Fix: Prevent error if no files are uploaded
-        // $paymentProofsUrls = [];
-        // if ($paymentProofFiles && is_array($paymentProofFiles)) {
-        //     foreach ($paymentProofFiles as $file) {
-        //         $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
-        //     }
-        // }
+        // ✅ Fix: Prevent error if no files are uploaded
+        $paymentProofsUrls = [];
+        if ($paymentProofFiles && is_array($paymentProofFiles)) {
+            foreach ($paymentProofFiles as $file) {
+                $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
+            }
+        }
 
-        // // 💰 Create Payment Record
-        // $payment = Payment::create([
-        //     'billing_id' => $billing->id,
-        //     'payable_id' => $billing->billable_id,
-        //     'payable_type' => $billing->billable_type,
-        //     'profile_id' => $billing->profile_id,
-        //     'amount_paid' => $amountPaid,
-        //     'payment_method' => $paymentMethod,
-        //     'payment_reference' => $paymentReference,
-        //     'payment_proof_url' => json_encode($paymentProofsUrls),
-        //     'status' => 'paid',
-        // ]);
+        // 💰 Create Payment Record
+        $payment = Payment::create([
+            'billing_id' => $billing->id,
+            'payable_id' => $billing->billable_id,
+            'payable_type' => $billing->billable_type,
+            'profile_id' => $billing->profile_id,
+            'amount_paid' => $amountPaid,
+            'payment_method' => $paymentMethod,
+            'paymongo_payment_reference' => $paymongoPaymentRef,
+            'payment_proof_url' => json_encode($paymentProofsUrls),
+            'status' => 'paid',
+        ]);
 
-        // // 🏦 Update Billing Record
-        // $billing->amount_paid += $amountPaid;
-        // $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
+        // 🏦 Update Billing Record
+        $billing->amount_paid += $amountPaid;
+        $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
         
-        // if ($billing->remaining_balance <= 0) {
-        //     $billing->status = 'paid';
-        // } elseif ($billing->amount_paid > 0) {
-        //     $billing->status = 'partial';
-        // }
+        if ($billing->remaining_balance <= 0) {
+            $billing->status = 'paid';
+        } elseif ($billing->amount_paid > 0) {
+            $billing->status = 'partial';
+        }
 
-        // $billing->save();
+        $billing->save();
 
-        // // 🏠 Create or Update Tenant
-        // $status = ($billing->status === 'paid') ? 'active' : 'pending';
+        // 🏠 Create or Update Tenant
+        $status = ($billing->status === 'paid') ? 'active' : 'pending';
 
-        // // ✅ Fix: Check if Tenant already exists before creating a new one
-        // $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
-        // if ($tenant) {
-        //     $tenant->status = $status;
-        //     $tenant->save();
-        // } else {
-        //     Tenant::create([
-        //         'profile_id' => $billing->profile_id,
-        //         'rental_agreement_id' => $billing->billable_id,
-        //         'status' => $status,
-        //     ]);
-        // }
+        // ✅ Fix: Check if Tenant already exists before creating a new one
+        $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
+        if ($tenant) {
+            $tenant->status = $status;
+            $tenant->save();
+        } else {
+            Tenant::create([
+                'profile_id' => $billing->profile_id,
+                'rental_agreement_id' => $billing->billable_id,
+                'status' => $status,
+            ]);
+        }
 
-        // // 📢 Notify Tenant if Payment is Partial
-        // if ($billing->status === 'partial') {
-        //     Notification::create([
-        //         'user_id' => $billing->userProfile->user_id,
-        //         'title' => 'Payment Reminder',
-        //         'message' => 'Your payment is incomplete. Please complete your payment to avoid issues.',
-        //         'is_read' => 0,
-        //     ]);
-        // }
+        // 📢 Notify Tenant if Payment is Partial
+        if ($billing->status === 'partial') {
+            Notification::create([
+                'user_id' => $billing->userProfile->user_id,
+                'title' => 'Payment Reminder',
+                'message' => 'Your payment is incomplete. Please complete your payment to avoid issues.',
+                'is_read' => 0,
+            ]);
+        }
 
-        // return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
+        return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
     }
 
 }

@@ -91,10 +91,12 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('billing')->group(function() {
         Route::get('index',[BillingController::class, 'index']);
         Route::get('getbillingforrentalagreement/{rentalagreement_code}', [BillingController::class, 'getBillingForRentalAgreement']);
+        Route::get('get-billing-details/{billingId}', [BillingController::class, 'getBillingDetails']);
+        // Route::post('store-payment-after-paymongo', []);
     });
 
     Route::prefix('payment')->group(function() {
-        Route::post('storepayment', [PaymentController::class, 'storePayment']);
+        Route::post('store-payment-after-paymongo', [PaymentController::class, 'storePaymentAfterPayMongo']);
         Route::post('process-payment', [PaymentController::class, 'processPayment']);
         Route::get('retrieve-payment/{billingId}', [PaymentController::class,'retrievePayment']);
 
