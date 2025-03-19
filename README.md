@@ -30,3 +30,11 @@ php artisan config:publish cors
 8. **Continue Payment** – Make the required payment.
 9. **User Becomes a Tenant** – The account is now officially listed as a tenant.
 
+## ⚠️ Important: Enable GD Extension in `php.ini`
+
+After cloning this project, you **must enable the GD extension** in PHP to avoid errors when generating PDFs or handling images.
+
+### 🛠 Steps to Enable GD Extension:
+1. Open a terminal and run the following command to locate your active `php.ini` file:
+   ```sh
+   php --ini

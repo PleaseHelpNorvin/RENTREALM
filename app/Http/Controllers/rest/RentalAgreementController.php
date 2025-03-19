@@ -36,7 +36,7 @@ class RentalAgreementController extends Controller
         );
     }
     
-
+ // ============================================================================================================================
     public function store(Request $request, )
     {
         $validatedData = $request->validate([
@@ -144,19 +144,34 @@ class RentalAgreementController extends Controller
     public function downloadPdf($id)
     {
         $rentalAgreement = RentalAgreement::findOrFail($id);
-        $pdfPath = storage_path("app/public/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
-
-        if (!file_exists($pdfPath)) {
-            return response()->json(['error' => 'PDF not found'], 404);
+    
+        // Full path to the image
+        $imagePath = storage_path("app/public/" . $rentalAgreement->signature_png_string);
+    
+        // Convert image to Base64
+        if (file_exists($imagePath)) {
+            $imageData = base64_encode(file_get_contents($imagePath));
+            $mimeType = mime_content_type($imagePath); // Get correct MIME type (e.g., image/png)
+            $signatureImage = "data:{$mimeType};base64,{$imageData}"; // Create data URI
+        } else {
+            $signatureImage = null; // Fallback if image is missing
         }
-
-        return response()->download($pdfPath);
+    
+        // Generate the PDF
+        $pdf = Pdf::setOptions(['isRemoteEnabled' => true]) // Ensure remote images can be loaded
+                  ->loadView('rental_agreements.pdf', compact('rentalAgreement', 'signatureImage'))
+                  ->setPaper('A4', 'portrait');
+    
+        return $pdf->download("Rental_Agreement_{$rentalAgreement->agreement_code}.pdf");
     }
-
-    public function show($id)
+    public function show($agreementCode)
     {
-        $rentalAgreement = RentalAgreement::findOrFail($id);
-        
+        $rentalAgreement = RentalAgreement::where('agreement_code', $agreementCode)->first();
+
+        if (!$rentalAgreement) {
+            return response()->json(['message' => 'Rental agreement not found'], 404);
+        }
+    
         // Append PDF URL only when fetching a single agreement
         $rentalAgreement->pdf_url = asset("storage/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
     
@@ -167,5 +182,7 @@ class RentalAgreementController extends Controller
     }
 
     
-    
+    // ============================================================================================================================
+
+    // publi
 }

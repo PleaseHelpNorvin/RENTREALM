@@ -17,16 +17,18 @@
         <p><strong>Agreement Code:</strong> {{ $rentalAgreement->agreement_code ?? 'N/A' }}</p>
         <p><strong>Rent Start Date:</strong> {{ $rentalAgreement->rent_start_date ?? 'N/A' }}</p>
         <p><strong>Rent End Date:</strong> {{ $rentalAgreement->rent_end_date ?? 'N/A' }}</p>
-        <p><strong>Total Monthly Due:</strong> {{ $rentalAgreement->total_monthly_due ?? 'N/A' }}</p>
+        <p><strong>Total Amount:</strong> {{ $rentalAgreement->total_amount ?? 'N/A' }}</p>
         <p><strong>Person Count:</strong> {{ $rentalAgreement->person_count ?? 'N/A' }}</p>
         <p><strong>Status:</strong> {{ $rentalAgreement->status ?? 'N/A' }}</p>
     </div>
 
     <div class="signature-container">
         <h2>Signature</h2>
+    
         @if (!empty($signatureImage))
+            {{-- <img src="{{ url('storage/' . $signatureImage) }}" alt="Signature" style="width: 200px; height: auto;"> --}}
             <img src="{{ $signatureImage }}" alt="Signature">
-        @else
+            @else
             <p>No signature available</p>
         @endif
     </div>

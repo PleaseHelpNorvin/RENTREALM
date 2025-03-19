@@ -56,6 +56,7 @@ Route::prefix('inquiry')->group(function(){
 
 //     return response()->json(['message' => 'Webhook received'], 200);
 // });
+Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
 
 
 // Protected routes with 'api' prefix and Sanctum middleware
@@ -112,8 +113,8 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
     Route::prefix('rental_agreement')->group(function(){
         Route::get('index', [RentalAgreementController::class, 'index']);
         Route::post('store', [RentalAgreementController::class, 'store']);
-        Route::get('show/{id}', [RentalAgreementController::class, 'show']);
-        Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
+        Route::get('show/{agreementCode}', [RentalAgreementController::class, 'show']);
+        // Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
         Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
 
     });
