@@ -253,14 +253,21 @@ class PaymentController extends Controller
 
         // 📢 Notify Tenant if Payment is Partial
         if ($billing->status === 'partial') {
-            Notification::create([
+            $payment->notifications()->create([
                 'user_id' => $billing->userProfile->user_id,
                 'title' => 'Payment Reminder',
                 'message' => 'Your payment is incomplete. Please complete your payment to avoid issues.',
                 'is_read' => 0,
             ]);
+        } elseif ($billing->status === 'paid') {
+            $payment->notifications()->create([
+                'user_id' => $billing->userProfile->user_id,
+                'title' => 'Payment Successful',
+                'message' => 'Your payment has been fully received. Thank you!',
+                'is_read' => 0,
+            ]);
         }
-
+        
         return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
     }
 
