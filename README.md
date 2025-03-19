@@ -1,6 +1,7 @@
-# RENTREALM
 
-## RENTREALM API
+# RENTREALM API
+
+a backbone API for RentRealm System
 
 ### Running on a Physical Debug Device
 
@@ -38,3 +39,39 @@ After cloning this project, you **must enable the GD extension** in PHP to avoid
 1. Open a terminal and run the following command to locate your active `php.ini` file:
    ```sh
    php --ini
+
+   Example output:
+
+   Configuration File (php.ini) Path:
+    Loaded Configuration File:         C:\php-8.3.9\php.ini
+    Scan for additional .ini files in: (none)
+    Additional .ini files parsed:      (none)
+
+2. Locate the "Loaded Configuration File" path in the output.
+Example: C:\php-8.3.9\php.ini
+
+3. Open the php.ini file in a text editor.
+
+4. Find the following line:
+
+    ```sh
+    ;extension=gd
+
+Remove the semicolon (;) at the beginning to enable it:
+
+    extension=gd
+
+5. Save the file and restart your server:
+
+    ```sh
+    php artisan serve --host=0.0.0.0 --port=8000
+
+6. Verify that GD is enabled:
+
+    ```sh
+    php -r "echo extension_loaded('gd') ? 'GD is enabled' : 'GD is NOT enabled';"
+##
+
+
+
+

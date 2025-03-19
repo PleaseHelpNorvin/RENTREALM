@@ -93,7 +93,6 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index',[BillingController::class, 'index']);
         Route::get('getbillingforrentalagreement/{rentalagreement_code}', [BillingController::class, 'getBillingForRentalAgreement']);
         Route::get('get-billing-details/{billingId}', [BillingController::class, 'getBillingDetails']);
-        // Route::post('store-payment-after-paymongo', []);
     });
 
     Route::prefix('payment')->group(function() {
@@ -114,8 +113,10 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [RentalAgreementController::class, 'index']);
         Route::post('store', [RentalAgreementController::class, 'store']);
         Route::get('show/{agreementCode}', [RentalAgreementController::class, 'show']);
-        // Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
+        Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
         Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
+        Route::get('view-pdf/{id}', [RentalAgreementController::class, 'generatePdfUrl']);
+        Route::get('index-profileId/{profileId}', [RentalAgreementController::class, 'indexByProfileId']);
 
     });
 

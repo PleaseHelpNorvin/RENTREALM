@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\rest;
 
-use App\Http\Controllers\Controller;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
+use Imagick;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Models\Room;
+use App\Models\Property;
+use App\Models\UserProfile;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\RentalAgreement;
-use App\Models\Property;
-use App\Models\Room;
-use Imagick;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 
 class RentalAgreementController extends Controller
@@ -31,7 +32,7 @@ class RentalAgreementController extends Controller
 
     
         return $this->successResponse(
-            ['rentalAgreements' => $rentalAgreements], 
+            ['rental_agreements' => $rentalAgreements], 
             "Rental agreements successfully fetched"
         );
     }
@@ -76,7 +77,7 @@ class RentalAgreementController extends Controller
         
         // Return success response immediately
         return $this->successResponse(
-            ['rentalAgreement' => [$rentalAgreement]], 
+            ['rental_agreements' => [$rentalAgreement]], 
             "Rental agreement created successfully"
         );
     }
@@ -164,6 +165,7 @@ class RentalAgreementController extends Controller
     
         return $pdf->download("Rental_Agreement_{$rentalAgreement->agreement_code}.pdf");
     }
+
     public function show($agreementCode)
     {
         $rentalAgreement = RentalAgreement::where('agreement_code', $agreementCode)->first();
@@ -176,7 +178,7 @@ class RentalAgreementController extends Controller
         $rentalAgreement->pdf_url = asset("storage/rental_agreement_contracts/{$rentalAgreement->agreement_code}.pdf");
     
         return $this->successResponse(
-            ['rentalAgreement' => $rentalAgreement], 
+            ['rental_agreements' => [$rentalAgreement]], 
             "Rental agreement retrieved successfully"
         );
     }
@@ -184,5 +186,68 @@ class RentalAgreementController extends Controller
     
     // ============================================================================================================================
 
-    // publi
+    public function generatePdfUrl($id)
+    {
+        $rentalAgreement = RentalAgreement::findOrFail($id);
+
+        // Full path to the image
+        $imagePath = storage_path("app/public/" . $rentalAgreement->signature_png_string);
+
+        // Convert image to Base64
+        if (file_exists($imagePath)) {
+            $imageData = base64_encode(file_get_contents($imagePath));
+            $mimeType = mime_content_type($imagePath);
+            $signatureImage = "data:{$mimeType};base64,{$imageData}";
+        } else {
+            $signatureImage = null;
+        }
+
+        // Generate the PDF
+        $pdf = Pdf::setOptions(['isRemoteEnabled' => true])
+                ->loadView('rental_agreements.pdf', compact('rentalAgreement', 'signatureImage'))
+                ->setPaper('A4', 'portrait');
+
+        // Define the storage path
+        $fileName = "Rental_Agreement_{$rentalAgreement->agreement_code}.pdf";
+        $pdfPath = "public/pdfs/{$fileName}";
+        $fullPath = storage_path("app/{$pdfPath}");
+
+        // Ensure directory exists
+        if (!file_exists(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+
+        // Save PDF to storage
+        $pdf->save($fullPath);
+
+        // Generate the URL
+        $pdfUrl = asset("storage/pdfs/{$fileName}");
+
+        return $this->successResponse(['pdf_url' => $pdfUrl], 'PDF generated successfully');
+    }
+    // ============================================================================================================================
+
+    public function indexByProfileId($profileId) {
+        // Find the profile and eager-load reservations with rental agreements
+        $userProfile = UserProfile::with('reservations.rentalAgreement')->find($profileId);
+    
+        // Check if profile exists
+        if (!$userProfile) {
+            return $this->notFoundResponse(null, 'User profile not found.');
+        }
+    
+        // Collect all rental agreements from reservations
+        $rentalAgreements = $userProfile->reservations->pluck('rentalAgreement')->filter();
+    
+        // Check if there are rental agreements
+        if ($rentalAgreements->isEmpty()) {
+            return $this->notFoundResponse(null, 'No rental agreements found for this profile.');
+        }
+    
+        return $this->successResponse(
+            ['rental_agreements' => $rentalAgreements],
+            "Fetched rental agreements for profile ID: $profileId"
+        );
+    }
+
 }
