@@ -186,9 +186,10 @@ class RentalAgreementController extends Controller
     
     // ============================================================================================================================
 
-    public function generatePdfUrl($id)
+    public function generatePdfUrl($agreementCode)
     {
-        $rentalAgreement = RentalAgreement::findOrFail($id);
+        // Find the rental agreement by agreement_code instead of id
+        $rentalAgreement = RentalAgreement::where('agreement_code', $agreementCode)->firstOrFail();
 
         // Full path to the image
         $imagePath = storage_path("app/public/" . $rentalAgreement->signature_png_string);
@@ -225,6 +226,7 @@ class RentalAgreementController extends Controller
 
         return $this->successResponse(['pdf_url' => $pdfUrl], 'PDF generated successfully');
     }
+
     // ============================================================================================================================
 
     public function indexByProfileId($profileId) {
