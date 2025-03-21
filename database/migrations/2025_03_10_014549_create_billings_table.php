@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade'); // Tenant being billed
             $table->morphs('billable'); // Links to reservation, rental agreement, etc.
+            $table->string('billing_title');
             $table->decimal('total_amount', 10, 2); // Total amount due
             $table->decimal('amount_paid', 10, 2)->default(0.00); // Amount paid
             $table->decimal('remaining_balance', 10, 2)->default(0.00); // Amount left unpaid

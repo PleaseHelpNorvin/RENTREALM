@@ -48,6 +48,7 @@ class RentalAgreementController extends Controller
             'total_amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'signature_png_string' => 'required|file|mimes:png', // File validation
+            'is_advance_payment' => 'required|boolean',
         ]);
         
         // Generate agreement_code (format: agreement-XXXXXX)

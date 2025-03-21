@@ -13,6 +13,7 @@ class Billing extends Model
         'profile_id', 
         'billable_id', 
         'billable_type', 
+        'billing_title',
         'total_amount',
         'amount_paid',
         'remaining_balance',

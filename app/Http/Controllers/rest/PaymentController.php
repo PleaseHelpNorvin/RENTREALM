@@ -228,6 +228,7 @@ class PaymentController extends Controller
         $billing->amount_paid += $amountPaid;
         $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
         
+        
         if ($billing->remaining_balance <= 0) {
             $billing->status = 'paid';
         } elseif ($billing->amount_paid > 0) {
@@ -275,76 +276,92 @@ class PaymentController extends Controller
     }
 
     public function generatePdfReceipt(Payment $payment)
-{
-    // 🔍 Ensure `payable` relationship is loaded
-    $payment->load('payable');
-
-    if (!$payment->payable) {
-        Log::error("Payable relationship not found for Payment ID: {$payment->id}");
-        return response()->json(['error' => 'Invalid payment association'], 400);
-    }
-
-    // 📁 Ensure storage directory exists
-    $directory = storage_path("app/public/payment_receipts");
-    if (!file_exists($directory)) {
-        mkdir($directory, 0755, true);
-        Log::info("Created directory: " . $directory);
-    } else {
-        Log::info("Directory already exists: " . $directory);
-    }
-
-    // 📄 Define PDF storage path
-    $pdfPath = storage_path("app/public/payment_receipts/receipt_{$payment->id}.pdf");
-    Log::info("Attempting to save PDF to: " . $pdfPath);
-
-    // 🖨 Generate PDF
-    try {
-        // Ensure `payable` model has a user relationship before accessing it
-        $user = null;
-        if ($payment->payable instanceof Billing) {
-            $user = optional($payment->payable->userProfile)->user;
-        }
-
-        $pdf = Pdf::loadView('payments.receipt_pdf', [
-            'payment' => $payment, 
-            'billing' => $payment->payable, 
-            'user' => $user,
-        ]);
-
-        $pdf->save($pdfPath);
-
-        // ✅ Ensure PDF was created
-        if (!file_exists($pdfPath)) {
-            Log::error("PDF file was not created at: " . $pdfPath);
-            return response()->json(['error' => 'Failed to generate PDF'], 500);
-        }
-
-        Log::info("PDF successfully created at: " . $pdfPath);
-
-        return response()->json([
-            'pdf_path' => asset("storage/payment_receipts/receipt_{$payment->id}.pdf")
-        ], 200);
-    } catch (\Exception $e) {
-        Log::error("PDF generation error: " . $e->getMessage());
-        return response()->json(['error' => 'PDF generation failed'], 500);
-    }
-}
-
-
+    {
+        $payment->load('billing.userProfile.user');
     
+        if (!$payment->billing) {
+            Log::error("Billing relationship not found for Payment ID: {$payment->id}");
+            return response()->json(['error' => 'Invalid payment association'], 400);
+        }
+    
+        $directory = storage_path("app/public/payment_receipts");
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+            Log::info("Created directory: " . $directory);
+        }
+    
+        $pdfPath = storage_path("app/public/payment_receipts/receipt_{$payment->paymongo_payment_reference}.pdf");
+        Log::info("Attempting to save PDF to: " . $pdfPath);
+    
+        try {
+            $user = optional($payment->billing->userProfile)->user;
+    
+            $pdf = Pdf::loadView('payments.receipt_pdf', [
+                'payment' => $payment,
+                'billing' => $payment->billing,
+                'user' => $user,
+                'receipt_title' => $payment->billing->billing_title,
+            ]);
+    
+            $pdf->save($pdfPath);
+    
+            if (!file_exists($pdfPath)) {
+                Log::error("PDF file was not created at: " . $pdfPath);
+                return response()->json(['error' => 'Failed to generate PDF'], 500);
+            }
+    
+            Log::info("PDF successfully created at: " . $pdfPath);
+    
+            return response()->json([
+                'pdf_path' => asset("storage/payment_receipts/receipt_{$payment->paymongo_payment_reference}.pdf")
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("PDF generation error: " . $e->getMessage());
+            return response()->json(['error' => 'PDF generation failed'], 500);
+        }
+    }
+        
 
 
 // ============================================================================================================================
 
 
-    // public function RetrieveReceiptsByProfileId($profileId) {
-    //     $receipts = Payment::where('profile_id', $profileId)->get();
+    public function RetrieveReceiptsByProfileId($profileId) {
+        $receipts = Payment::where('profile_id', $profileId)->get();
     
-    //     if ($receipts->isEmpty()) {
-    //         return $this->NotFoundResponse(null, 'No receipt found');
-    //     }
+        if ($receipts->isEmpty()) {
+            return $this->NotFoundResponse(null, 'No receipt found');
+        }
     
-    //     return $this->successResponse(['receipts' => $receipts], "Receipts fetched successfully");
-    // }
+        return $this->successResponse(['receipts' => $receipts], "Receipts fetched successfully");
+    }
 
-}
+
+    
+    public function getAllReceiptUrlsByProfileId($profileId) {
+        $payments = Payment::where('profile_id', $profileId)->get(); // Get all payments for the profile
+    
+        if ($payments->isEmpty()) {
+            return $this->NotFoundResponse(null, 'No receipts found for this profile.');
+        }
+    
+        $receiptUrls = [];
+    
+        foreach ($payments as $payment) {
+            $receiptPath = "payment_receipts/receipt_{$payment->paymongo_payment_reference}.pdf"; // Construct file path
+            $fullPath = public_path("storage/{$receiptPath}");
+    
+            if (file_exists($fullPath)) {
+                $receiptUrls[] = [
+                    'paymongo_payment_reference' => $payment->paymongo_payment_reference,
+                    'receipt_url' => asset("storage/{$receiptPath}")
+                ];
+            }
+        }
+    
+        if (empty($receiptUrls)) {
+            return $this->NotFoundResponse(null, 'No receipt files found.');
+        }
+    
+        return $this->successResponse(['receipts' => $receiptUrls], "Receipts fetched successfully");
+    }}

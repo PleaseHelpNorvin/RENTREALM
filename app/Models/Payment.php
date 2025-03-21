@@ -15,7 +15,7 @@ class Payment extends Model
         'payable_id',
         'payable_type',
         'profile_id',
-        'amount_due',
+        // 'amount_due',
         'amount_paid',
         'remaining_balance',
         'payment_method',
@@ -34,4 +34,11 @@ class Payment extends Model
     {
         return $this->morphMany(Notification::class, 'notifiable'); 
     }
+
+    public function billing()
+    {
+        return $this->belongsTo(Billing::class, 'billing_id');
+    }
+    
+
 }

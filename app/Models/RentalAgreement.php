@@ -24,6 +24,7 @@ class RentalAgreement extends Model
         'description',
         'signature_png_string',
         'status',
+        'is_advance_payment',
     ];
 
     protected $casts = [
@@ -38,11 +39,15 @@ class RentalAgreement extends Model
     {
         static::created(function ($rentalAgreement) {
             $profileId = $rentalAgreement->reservation->profile_id ?? null;
-            
+
+            // Determine billing title based on advance_payment 
+            $billingTitle = $rentalAgreement->is_advance_payment ? 'Initial Payment' : 'Monthly Payment';
+
             Billing::create([
                 'profile_id' => $profileId, 
                 'billable_id' => $rentalAgreement->id,
                 'billable_type' => RentalAgreement::class,
+                'billing_title' => $billingTitle, // Set billing title dynamically
                 'total_amount' => $rentalAgreement->total_amount, 
                 'amount_paid' => 0.00,
                 'remaining_balance' => $rentalAgreement->total_amount, 

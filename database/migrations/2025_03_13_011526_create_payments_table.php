@@ -19,7 +19,6 @@ return new class extends Migration
             
             // Polymorphic relationship (for different types of payments)
             $table->morphs('payable'); // Links to reservations, rental agreements, etc.
-            
             // Tenant making the payment
             $table->foreignId('profile_id')->constrained('user_profiles')->onDelete('cascade');
 

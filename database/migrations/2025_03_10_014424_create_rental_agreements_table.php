@@ -28,7 +28,7 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2);
             
             // $table->boolean('advance_payment');
-
+            $table->boolean('is_advance_payment')->default(false);
             $table->longText('description')->nullable();
             $table->string('signature_png_string');
             

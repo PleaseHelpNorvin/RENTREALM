@@ -99,6 +99,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store-payment-after-paymongo', [PaymentController::class, 'storePaymentAfterPayMongo']);
         Route::post('process-payment', [PaymentController::class, 'processPayment']);
         Route::get('retrieve-payment/{billingId}', [PaymentController::class,'retrievePayment']);
+        Route::get('retrieve-receipt/{profileId}', [PaymentController::class, 'getAllReceiptUrlsByProfileId']);
 
     });
 
