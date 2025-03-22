@@ -75,3 +75,7 @@ Remove the semicolon (;) at the beginning to enable it:
 
 
 
+### NEXT TASK
+
+1. billing logic 
+2. logic for ending a tenant contract
