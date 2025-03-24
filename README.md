@@ -75,3 +75,21 @@ Remove the semicolon (;) at the beginning to enable it:
 
 
 
+
+
+rental_agreements FOR Monthly Billing Logic
+----------------------------
+data module or provider needed to formulate billing countdown logic:
+
+
+reservation
+userProfile
+room
+
+ 
+for making a billing and payment :
+billings
+payment
+notifications
+
+============
