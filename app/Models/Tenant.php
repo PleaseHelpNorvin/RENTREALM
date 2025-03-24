@@ -31,13 +31,16 @@ class Tenant extends Model
     //     return $this->belongsTo(Room::class);
     // }
 
-    public function rentalAgreements()
+    public function rentalAgreement()
     {
-        return $this->belongsToMany(RentalAgreement::class, 'tenant_rental_agreements');
+        return $this->belongsTo(RentalAgreement::class, 'rental_agreement_id');
     }
 
     public function userProfile()
     {
-        return $this->HasOne(userProfile::class);
+        return $this->hasOne(UserProfile::class, 'id', 'profile_id');
     }
+    
+
+
 }

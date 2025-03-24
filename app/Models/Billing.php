@@ -41,6 +41,12 @@ class Billing extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable'); 
+    }
+
 }
 
 

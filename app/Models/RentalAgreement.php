@@ -61,6 +61,11 @@ class RentalAgreement extends Model
     {
         return $this->belongsTo(Reservation::class, 'reservation_id'); 
     }
+
+    public function tenants()
+    {
+        return $this->hasMany(Tenant::class, 'rental_agreement_id');
+    }
 }
 
 

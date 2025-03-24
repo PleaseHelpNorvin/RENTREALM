@@ -50,10 +50,12 @@ class RentalAgreementController extends Controller
             'signature_png_string' => 'required|file|mimes:png', // File validation
             'is_advance_payment' => 'required|boolean',
         ]);
-        
+        $isAdvancePayment = $validatedData['is_advance_payment'];
+        if ($isAdvancePayment) {
+            $validatedData['rent_start_date'] = Carbon::parse($validatedData['rent_start_date'])->addMonthsNoOverflow(1)->format('Y-m-d');
+        }
         // Generate agreement_code (format: agreement-XXXXXX)
         $agreementCode = 'agreement-' . mt_rand(100000, 999999);
-        
         // Define the custom directory path
         $directory = public_path('storage/contract_signatures');
         

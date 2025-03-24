@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\rest;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Tenant;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Artisan;
 
 class TenantController extends Controller
 {
@@ -47,14 +48,20 @@ class TenantController extends Controller
 
     public function showByProfileId($profile_id)
     {
-        $tenant = Tenant::with('rentalAgreement')->where('profile_id', $profile_id)->first();
+        $tenant = Tenant::with(['rentalAgreement', 'userProfile'])
+            ->where('profile_id', $profile_id)
+            ->first();
 
         if (!$tenant) {
             return $this->notFoundResponse(null, "Tenant with profile ID $profile_id not found.");
         }
 
+        Artisan::call('invoices:generate');
+
+
         return $this->successResponse(['tenant' => $tenant], 'Tenant fetched successfully.');
     }
+
 
     public function update(Request $request, $tenant_id)
     {

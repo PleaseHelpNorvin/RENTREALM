@@ -140,7 +140,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [TenantController::class, 'index']);
         Route::post('store', [TenantController::class, 'store']);
         Route::get('show/{tenant_id}', [TenantController::class, 'show']);
-        Route::get('showbyprofile_id/{profile_id}', [TenantController::class, 'showByProfileId']);
+        Route::get('showbyprofileId/{profile_id}', [TenantController::class, 'showByProfileId']);
         Route::delete('destroy/{tenant_id}', [TenantController::class, 'destroy']);
         Route::delete('destroybyprofile_id/{profile_id}', [TenantController::class, 'destroyByProfileId']);
     });
