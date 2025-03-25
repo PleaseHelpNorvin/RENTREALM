@@ -56,10 +56,26 @@ class TenantController extends Controller
             return $this->notFoundResponse(null, "Tenant with profile ID $profile_id not found.");
         }
 
+        // Fetch latest billing for the tenant
+        $billing = Billing::where('profile_id', $profile_id)
+            ->orderBy('billing_month', 'desc')
+            ->first();
+
+        if ($billing) {
+            // Add one month to the billing date
+            $newBillingMonth = Carbon::parse($billing->billing_month)->addMonth();
+            
+            // Update the billing month in the database
+            $billing->update(['billing_month' => $newBillingMonth->format('Y-m-d')]);
+        }
+
+        // Run the command to generate the next invoice
         Artisan::call('invoices:generate');
 
-
-        return $this->successResponse(['tenant' => $tenant], 'Tenant fetched successfully.');
+        return $this->successResponse([
+            'tenant' => $tenant,
+            'updated_billing_month' => $billing->billing_month ?? null
+        ], 'Tenant fetched and billing month updated successfully.');
     }
 
 

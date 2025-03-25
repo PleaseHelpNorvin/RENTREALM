@@ -52,7 +52,7 @@ class RentalAgreementController extends Controller
         ]);
         $isAdvancePayment = $validatedData['is_advance_payment'];
         if ($isAdvancePayment) {
-            $validatedData['rent_start_date'] = Carbon::parse($validatedData['rent_start_date'])->addMonthsNoOverflow(1)->format('Y-m-d');
+            $validatedData['rent_start_date'] = Carbon::parse($validatedData['rent_start_date'])->now()->format('Y-m-d');
         }
         // Generate agreement_code (format: agreement-XXXXXX)
         $agreementCode = 'agreement-' . mt_rand(100000, 999999);
