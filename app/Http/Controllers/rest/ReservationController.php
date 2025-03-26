@@ -121,6 +121,17 @@ class ReservationController extends Controller
     
         return $this->successResponse(['reservations' => [$reservation]], 'Reservation retrieved successfully');
     }
+
+    public function IndexByProfileId($profileId)
+    {
+        $reservations = Reservation::where('profile_id', $profileId)->get();
+    
+        if ($reservations->isEmpty()) {
+            return $this->notFoundResponse(null, "No Reservations of $profileId Found");
+        }
+    
+        return $this->successResponse(['reservations' => $reservations], "Reservations of $profileId Retrieved Successfully");
+    }
     
                 
 }

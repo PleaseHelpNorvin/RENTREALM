@@ -86,7 +86,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index',[ReservationController::class, 'index']);
         Route::post('store',[ReservationController::class, 'store']);
         Route::get('show/{id}',[ReservationController::class,'show']);
-
+        Route::get('indexByProfileId/{profileId}', [ReservationController::class, 'IndexByProfileId']);
     });
 
     Route::prefix('billing')->group(function() {

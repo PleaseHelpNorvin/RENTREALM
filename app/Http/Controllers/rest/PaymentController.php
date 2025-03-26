@@ -185,11 +185,12 @@ class PaymentController extends Controller
 
     private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
     {
-
+        $centToPesoAmountPaid = $amountPaid / 100; // ✅ Fix: Use correct variable
+    
         try {
             Log::info('storePaymentAfterPayMongo called with:', [
                 'billingId' => $billingId,
-                'amountPaid' => $amountPaid,
+                'amountPaid' => $centToPesoAmountPaid,
                 'paymentMethod' => $paymentMethod,
                 'paymentReference' => $paymongoPaymentRef,
                 'paymentProofFiles' => $paymentProofFiles
@@ -197,49 +198,49 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             Log::error('Logging failed: ' . $e->getMessage());
         }
+    
         // 🔎 Find the billing record
         $billing = Billing::find($billingId);
         if (!$billing) {
             return response()->json(['message' => 'Billing not found'], 404);
         }
-
+    
         // ✅ Fix: Prevent error if no files are uploaded
         $paymentProofsUrls = [];
-        if ($paymentProofFiles && is_array($paymentProofFiles)) {
+        if (!empty($paymentProofFiles) && is_array($paymentProofFiles)) {
             foreach ($paymentProofFiles as $file) {
                 $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
             }
         }
-
+    
         // 💰 Create Payment Record
         $payment = Payment::create([
             'billing_id' => $billing->id,
             'payable_id' => $billing->billable_id,
             'payable_type' => $billing->billable_type,
             'profile_id' => $billing->profile_id,
-            'amount_paid' => $amountPaid,
+            'amount_paid' => $centToPesoAmountPaid,
             'payment_method' => $paymentMethod,
             'paymongo_payment_reference' => $paymongoPaymentRef,
             'payment_proof_url' => json_encode($paymentProofsUrls),
             'status' => 'paid',
         ]);
-
+    
         // 🏦 Update Billing Record
-        $billing->amount_paid += $amountPaid;
+        $billing->amount_paid += $centToPesoAmountPaid; // ✅ Fix: Use correct property
         $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
-        
-        
+    
         if ($billing->remaining_balance <= 0) {
             $billing->status = 'paid';
-        } elseif ($billing->amount_paid > 0) {
+        } elseif ($billing->remaining_balance > 0) { // ✅ Fix: Check balance, not amount_paid
             $billing->status = 'partial';
         }
-
+    
         $billing->save();
-
+    
         // 🏠 Create or Update Tenant
         $status = ($billing->status === 'paid') ? 'active' : 'pending';
-
+    
         // ✅ Fix: Check if Tenant already exists before creating a new one
         $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
         if ($tenant) {
@@ -252,28 +253,27 @@ class PaymentController extends Controller
                 'status' => $status,
             ]);
         }
-
-        // 📢 Notify Tenant if Payment is Partial
+    
+        // 📢 Notify Tenant
+        $notificationData = [
+            'user_id' => $billing->userProfile->user_id,
+            'is_read' => 0,
+        ];
+    
         if ($billing->status === 'partial') {
-            $payment->notifications()->create([
-                'user_id' => $billing->userProfile->user_id,
-                'title' => 'Payment Reminder',
-                'message' => 'Your payment is incomplete. Please complete your payment to avoid issues.',
-                'is_read' => 0,
-            ]);
+            $notificationData['title'] = 'Payment Reminder';
+            $notificationData['message'] = 'Your payment is incomplete. Please complete your payment to avoid issues.';
         } elseif ($billing->status === 'paid') {
-            $payment->notifications()->create([
-                'user_id' => $billing->userProfile->user_id,
-                'title' => 'Payment Successful',
-                'message' => 'Your payment has been fully received. Thank you!',
-                'is_read' => 0,
-            ]);
-
+            $notificationData['title'] = 'Payment Successful';
+            $notificationData['message'] = 'Your payment has been fully received. Thank you!';
             $this->generatePdfReceipt($payment);
         }
-        
+    
+        $payment->notifications()->create($notificationData);
+    
         return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
     }
+        
 
     public function generatePdfReceipt(Payment $payment)
     {

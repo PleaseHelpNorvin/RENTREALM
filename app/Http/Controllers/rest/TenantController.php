@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\rest;
 
+use Carbon\Carbon;
 use App\Models\Tenant;
+use App\Models\Billing;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Artisan;
@@ -61,23 +63,56 @@ class TenantController extends Controller
             ->orderBy('billing_month', 'desc')
             ->first();
 
-        if ($billing) {
-            // Add one month to the billing date
-            $newBillingMonth = Carbon::parse($billing->billing_month)->addMonth();
-            
-            // Update the billing month in the database
-            $billing->update(['billing_month' => $newBillingMonth->format('Y-m-d')]);
-        }
+        // Calculate the next billing month (if a billing record exists)
+        $nextBillingMonth = $billing
+            ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
+            : null;
 
-        // Run the command to generate the next invoice
-        Artisan::call('invoices:generate');
+        // Hardcoded maintenance requests
+        $maintenanceRequests = [
+            [
+                'id' => 1,
+                'request_type' => 'Plumbing',
+                'description' => 'Leaking faucet in kitchen',
+                'status' => 'pending',
+                'requested_at' => '2025-03-20 14:30:00'
+            ],
+            [
+                'id' => 2,
+                'request_type' => 'Electrical',
+                'description' => 'Power outlet not working in bedroom',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+            [
+                'id' => 3,
+                'request_type' => 'Electrical',
+                'description' => 'Power outlet not working in bedroom',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+            [
+                'id' => 4,
+                'request_type' => 'Electrical',
+                'description' => 'Power outlet not working in bedroom',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+        ];
 
         return $this->successResponse([
             'tenant' => $tenant,
-            'updated_billing_month' => $billing->billing_month ?? null
-        ], 'Tenant fetched and billing month updated successfully.');
+            'latest_billing' => $billing ? [
+                'billing_month' => $billing->billing_month,
+                'status' => $billing->status,
+                'total_amount' => $billing->total_amount,
+                'amount_paid' => $billing->amount_paid,
+                'remaining_balance' => $billing->remaining_balance
+            ] : null,
+            'next_billing_month' => $nextBillingMonth,
+            'maintenance_requests' => $maintenanceRequests, // Add hardcoded data here
+        ], 'Tenant fetched successfully.');
     }
-
 
     public function update(Request $request, $tenant_id)
     {
