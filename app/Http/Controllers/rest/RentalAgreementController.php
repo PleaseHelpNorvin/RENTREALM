@@ -40,6 +40,8 @@ class RentalAgreementController extends Controller
  // ============================================================================================================================
     public function store(Request $request, )
     {
+        Log::info('Rental Agreement Store Function Called', ['request_data' => $request->all()]);
+
         $validatedData = $request->validate([
             'reservation_id' => 'required|exists:reservations,id', 
             'rent_start_date' => 'required|date',  
@@ -52,7 +54,7 @@ class RentalAgreementController extends Controller
         ]);
         $isAdvancePayment = $validatedData['is_advance_payment'];
         if ($isAdvancePayment) {
-            $validatedData['rent_start_date'] = Carbon::parse($validatedData['rent_start_date'])->now()->format('Y-m-d');
+            $validatedData['rent_start_date'] = Carbon::parse($validatedData['rent_start_date'])->format('Y-m-d');
         }
         // Generate agreement_code (format: agreement-XXXXXX)
         $agreementCode = 'agreement-' . mt_rand(100000, 999999);
