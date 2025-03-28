@@ -257,4 +257,23 @@ class RentalAgreementController extends Controller
         );
     }
 
+    public function ShowActiveRentalAgreementByProfileId($profileId)
+    {
+        $activeRentalAgreements = RentalAgreement::whereHas('reservation', function ($query) use ($profileId) {
+                $query->where('profile_id', $profileId);
+            })
+            ->where('status', 'active')
+            ->get();
+    
+        if ($activeRentalAgreements->isEmpty()) {
+            return $this->notFoundResponse(null, "No Active Rental Agreement Found for this profile.");
+        }
+    
+        return $this->successResponse(
+            ['rental_agreements' => $activeRentalAgreements], 
+            "Active Rental For ProfileId: $profileId fetched Successfully"
+        );
+    }
+    
+
 }

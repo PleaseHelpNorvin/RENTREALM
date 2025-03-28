@@ -118,6 +118,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
         Route::get('view-pdf/{id}', [RentalAgreementController::class, 'generatePdfUrl']);
         Route::get('index-profileId/{profileId}', [RentalAgreementController::class, 'indexByProfileId']);
+        Route::get('show-active-Rental-agreement/{profileId}', [RentalAgreementController::class, 'ShowActiveRentalAgreementByProfileId']);
 
     });
 
@@ -143,7 +144,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('showbyprofileId/{profile_id}', [TenantController::class, 'showByProfileId']);
         Route::delete('destroy/{tenant_id}', [TenantController::class, 'destroy']);
         Route::delete('destroybyprofile_id/{profile_id}', [TenantController::class, 'destroyByProfileId']);
-    });
+    }); 
 
     Route::prefix('maintenance')->group(function () {
 

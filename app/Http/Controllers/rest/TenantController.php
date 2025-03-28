@@ -5,7 +5,9 @@ namespace App\Http\Controllers\rest;
 use Carbon\Carbon;
 use App\Models\Tenant;
 use App\Models\Billing;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
+use App\Models\RentalAgreement;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Artisan;
 
@@ -113,6 +115,83 @@ class TenantController extends Controller
             'maintenance_requests' => $maintenanceRequests, // Add hardcoded data here
         ], 'Tenant fetched successfully.');
     }
+    
+    public function showDashboardDataForAgreement($agreementId)
+{
+    // Find the rental agreement and its related reservation
+    $agreement = RentalAgreement::with('reservation')->where('id', $agreementId)->first();
+
+    if (!$agreement) {
+        return $this->notFoundResponse(null, "Agreement with ID $agreementId not found.");
+    }
+
+    // Ensure the reservation exists
+    $reservation = $agreement->reservation;
+
+    if (!$reservation) {
+        return $this->notFoundResponse(null, "No reservation found for agreement ID $agreementId.");
+    }
+
+    // Get the profile ID from the reservation
+    $profileId = $reservation->profile_id;
+
+    // Fetch the tenant using profile ID
+    $tenant = Tenant::with(['userProfile'])->where('profile_id', $profileId)->first();
+
+    if (!$tenant) {
+        return $this->notFoundResponse(null, "No tenant found for profile ID $profileId.");
+    }
+
+    // Update tenant's rental agreement ID
+    $tenant->rental_agreement_id = $agreementId;
+    $tenant->save();
+
+    // Fetch latest billing for this profile
+    $billing = Billing::where('profile_id', $profileId)
+        ->orderBy('billing_month', 'desc')
+        ->first();
+
+    // Calculate the next billing month (if a billing record exists)
+    $nextBillingMonth = $billing
+        ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
+        : null;
+
+    // Hardcoded maintenance requests (Replace this with actual DB queries if needed)
+    $maintenanceRequests = [
+        [
+            'id' => 1,
+            'request_type' => 'Plumbing',
+            'description' => 'Leaking faucet in kitchen',
+            'status' => 'pending',
+            'requested_at' => '2025-03-20 14:30:00'
+        ],
+        [
+            'id' => 2,
+            'request_type' => 'Electrical',
+            'description' => 'Power outlet not working in bedroom',
+            'status' => 'in_progress',
+            'requested_at' => '2025-03-22 10:15:00'
+        ]
+    ];
+
+    return $this->successResponse([
+        'agreement' => $agreement,
+        'tenant' => $tenant,
+        'latest_billing' => $billing ? [
+            'billing_month' => $billing->billing_month,
+            'status' => $billing->status,
+            'total_amount' => $billing->total_amount,
+            'amount_paid' => $billing->amount_paid,
+            'remaining_balance' => $billing->remaining_balance
+        ] : null,
+        'next_billing_month' => $nextBillingMonth,
+        'maintenance_requests' => $maintenanceRequests
+    ], 'Dashboard data updated successfully.');
+}
+
+
+
+
 
     public function update(Request $request, $tenant_id)
     {
