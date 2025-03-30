@@ -81,22 +81,43 @@ class TenantController extends Controller
             ],
             [
                 'id' => 2,
-                'request_type' => 'Electrical',
-                'description' => 'Power outlet not working in bedroom',
+                'request_type' => 'Electrical1',
+                'description' => 'Power outlet not working in bedroom1',
                 'status' => 'in_progress',
                 'requested_at' => '2025-03-22 10:15:00'
             ],
             [
                 'id' => 3,
-                'request_type' => 'Electrical',
-                'description' => 'Power outlet not working in bedroom',
+                'request_type' => 'Electrical2',
+                'description' => 'Power outlet not working in bedroom2',
                 'status' => 'in_progress',
                 'requested_at' => '2025-03-22 10:15:00'
             ],
             [
                 'id' => 4,
-                'request_type' => 'Electrical',
-                'description' => 'Power outlet not working in bedroom',
+                'request_type' => 'Electrical3',
+                'description' => 'Power outlet not working in bedroom3',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+            [
+                'id' => 5,
+                'request_type' => 'Electrical4',
+                'description' => 'Power outlet not working in bedroom4',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+            [
+                'id' => 6,
+                'request_type' => 'Electrical5',
+                'description' => 'Power outlet not working in bedroom6',
+                'status' => 'in_progress',
+                'requested_at' => '2025-03-22 10:15:00'
+            ],
+            [
+                'id' => 7,
+                'request_type' => 'Electrical6',
+                'description' => 'Power outlet not working in bedroom7',
                 'status' => 'in_progress',
                 'requested_at' => '2025-03-22 10:15:00'
             ],
@@ -116,83 +137,6 @@ class TenantController extends Controller
         ], 'Tenant fetched successfully.');
     }
     
-    public function showDashboardDataForAgreement($agreementId)
-{
-    // Find the rental agreement and its related reservation
-    $agreement = RentalAgreement::with('reservation')->where('id', $agreementId)->first();
-
-    if (!$agreement) {
-        return $this->notFoundResponse(null, "Agreement with ID $agreementId not found.");
-    }
-
-    // Ensure the reservation exists
-    $reservation = $agreement->reservation;
-
-    if (!$reservation) {
-        return $this->notFoundResponse(null, "No reservation found for agreement ID $agreementId.");
-    }
-
-    // Get the profile ID from the reservation
-    $profileId = $reservation->profile_id;
-
-    // Fetch the tenant using profile ID
-    $tenant = Tenant::with(['userProfile'])->where('profile_id', $profileId)->first();
-
-    if (!$tenant) {
-        return $this->notFoundResponse(null, "No tenant found for profile ID $profileId.");
-    }
-
-    // Update tenant's rental agreement ID
-    $tenant->rental_agreement_id = $agreementId;
-    $tenant->save();
-
-    // Fetch latest billing for this profile
-    $billing = Billing::where('profile_id', $profileId)
-        ->orderBy('billing_month', 'desc')
-        ->first();
-
-    // Calculate the next billing month (if a billing record exists)
-    $nextBillingMonth = $billing
-        ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
-        : null;
-
-    // Hardcoded maintenance requests (Replace this with actual DB queries if needed)
-    $maintenanceRequests = [
-        [
-            'id' => 1,
-            'request_type' => 'Plumbing',
-            'description' => 'Leaking faucet in kitchen',
-            'status' => 'pending',
-            'requested_at' => '2025-03-20 14:30:00'
-        ],
-        [
-            'id' => 2,
-            'request_type' => 'Electrical',
-            'description' => 'Power outlet not working in bedroom',
-            'status' => 'in_progress',
-            'requested_at' => '2025-03-22 10:15:00'
-        ]
-    ];
-
-    return $this->successResponse([
-        'agreement' => $agreement,
-        'tenant' => $tenant,
-        'latest_billing' => $billing ? [
-            'billing_month' => $billing->billing_month,
-            'status' => $billing->status,
-            'total_amount' => $billing->total_amount,
-            'amount_paid' => $billing->amount_paid,
-            'remaining_balance' => $billing->remaining_balance
-        ] : null,
-        'next_billing_month' => $nextBillingMonth,
-        'maintenance_requests' => $maintenanceRequests
-    ], 'Dashboard data updated successfully.');
-}
-
-
-
-
-
     public function update(Request $request, $tenant_id)
     {
         $tenant = Tenant::find($tenant_id);

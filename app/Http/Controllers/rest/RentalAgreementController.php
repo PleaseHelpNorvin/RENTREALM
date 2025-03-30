@@ -7,10 +7,11 @@ use Carbon\Carbon;
 use App\Models\Room;
 use App\Models\Property;
 use App\Models\UserProfile;
+use App\Models\RentalAgreement;
+use App\Models\Billing;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Models\RentalAgreement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -274,6 +275,50 @@ class RentalAgreementController extends Controller
             "Active Rental For ProfileId: $profileId fetched Successfully"
         );
     }
+
+    public function ViewContractCountdown($agreementId)
+    {
+        // Find the rental agreement
+        $agreement = RentalAgreement::find($agreementId);
+        
+        if (!$agreement) {
+            return $this->notFoundResponse(null, "Agreement with ID $agreementId not found.");
+        }
+
+        // Find the latest billing record linked to this rental agreement
+        $billing = Billing::where('billable_id', $agreementId)
+            ->where('billable_type', RentalAgreement::class)
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if (!$billing) {
+            return $this->notFoundResponse(null, "No billing record found for agreement ID $agreementId.");
+        }
+
+        // Get last updated date of the billing
+        $lastBillingUpdate = Carbon::parse($billing->updated_at);
+
+        // Calculate the next billing date (1 month after last update)
+        $nextBillingDate = $lastBillingUpdate->copy()->addMonth();
+
+        // Calculate remaining days (rounded)
+        $remainingDays = Carbon::now()->diffInDays($nextBillingDate, false);
+        $remainingDays = max(round($remainingDays), 0); // Ensure non-negative
+
+        return $this->successResponse([
+            'rental_agreement_id' => $agreementId,
+            'rental_agreement_code' => $agreement->agreement_code, // Agreement code
+            'last_billing_update' => $lastBillingUpdate->toDateTimeString(),
+            'next_billing_date' => $nextBillingDate->toDateString(),
+            'remaining_days' => $remainingDays,
+            'billing_status' => $billing->status, // Added billing status
+            'total_amount' => $billing->total_amount, // Added total billing amount
+            'amount_paid' => $billing->amount_paid, // Added amount paid
+            'remaining_balance' => $billing->remaining_balance // Added remaining balance
+        ], 'Contract countdown retrieved successfully.');
+    }
+
+
     
 
 }

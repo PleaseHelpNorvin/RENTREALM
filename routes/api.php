@@ -119,7 +119,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('view-pdf/{id}', [RentalAgreementController::class, 'generatePdfUrl']);
         Route::get('index-profileId/{profileId}', [RentalAgreementController::class, 'indexByProfileId']);
         Route::get('show-active-Rental-agreement/{profileId}', [RentalAgreementController::class, 'ShowActiveRentalAgreementByProfileId']);
-
+        Route::get('view-contract-countdown/{agreementId}', [RentalAgreementController::class, 'ViewContractCountdown']);
     });
 
     Route::prefix('property')->group(function () {

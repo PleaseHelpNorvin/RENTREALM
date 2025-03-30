@@ -112,16 +112,24 @@ class ReservationController extends Controller
         // http://127.0.0.1:8000/api/landlord/reservation/updateStatus/1?status=confirmed&approved_by=1
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         $reservation = Reservation::find($id);
-        
+    
         if (!$reservation) {
             return $this->notFoundResponse(null, "Reservation Not Found");
         }
     
-        return $this->successResponse(['reservations' => [$reservation]], 'Reservation retrieved successfully');
+        // Ensure the reservation_payment_proof_url is properly formatted
+        $reservation->reservation_payment_proof_url = collect(json_decode($reservation->reservation_payment_proof_url, true))
+            ->map(function ($file) {
+                return url("storage/$file");
+            });
+    
+        return $this->successResponse([
+            'reservations' => [$reservation]
+        ], 'Reservation retrieved successfully');
     }
-
     public function IndexByProfileId($profileId)
     {
         $reservations = Reservation::where('profile_id', $profileId)->get();
