@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Reservation;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
@@ -43,6 +44,11 @@ class Room extends Model
         return $this->hasMany(PickedRoom::class);
     }
 
+    public function reservation()
+    {
+        return $this->hasOne(Reservation::class, 'room_id');
+    }
+
     public function property()
     {
         return $this->belongsTo(Property::class);
@@ -51,6 +57,11 @@ class Room extends Model
     public function rentalAgreements()
     {
         return $this->hasMany(RentalAgreement::class);
+    }
+
+    public function maintenanceRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'room_id');
     }
     
 

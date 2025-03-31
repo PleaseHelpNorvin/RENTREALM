@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\auth;
 
 use App\Models\User;
+use App\Models\Handyman;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -98,6 +99,33 @@ class AuthController extends Controller
             'token' => $token,
             'user' => $newUser,
         ], 'User created and logged in successfully');
+    }
+
+    public function createHandyman(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+        ]);
+
+        $newUser = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'handyman',
+        ]); 
+
+        $handyman = Handyman::create([
+            'user_id' => $newUser->id,
+            'status' => 'available', // Default status
+        ]);
+    
+
+        return $this->successResponse([
+            // 'token' => $token,
+            'user' => $newUser,
+        ], 'user Handyman created successfully');
     }
 
     public function logout(Request $request) 

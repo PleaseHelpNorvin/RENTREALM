@@ -36,11 +36,20 @@ class Tenant extends Model
         return $this->belongsTo(RentalAgreement::class, 'rental_agreement_id');
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(User::class, 'tenant_id');
+    }
+
     public function userProfile()
     {
         return $this->hasOne(UserProfile::class, 'id', 'profile_id');
     }
     
+    public function maintenanceRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'tenant_id');
+    }
 
-
+  
 }

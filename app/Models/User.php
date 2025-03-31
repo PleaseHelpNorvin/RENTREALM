@@ -71,11 +71,17 @@ class User extends Authenticatable
     {
         return $this->role === self::TENANT;
     }
+    
 
     // General role checker (optional)
     public function isRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function handyman()
+    {
+        return $this->hasOne(Handyman::class);
     }
 
     public function pickedRooms()
@@ -91,5 +97,10 @@ class User extends Authenticatable
     public function approvedBy()
     {
         return $this->hasMany(Reservation::class, 'approved_by');
+    }
+
+    public function assignedRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'assigned_by');
     }
 }

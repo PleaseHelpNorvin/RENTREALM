@@ -320,5 +320,26 @@ class RentalAgreementController extends Controller
 
 
     
-
+    public function getRoomsByProfileId($profileId)
+    {
+        $rentalAgreements = RentalAgreement::whereHas('reservation', function ($query) use ($profileId) {
+            $query->where('profile_id', $profileId);
+        })->with('reservation.room')->get();
+    
+        if ($rentalAgreements->isEmpty()) {
+            return $this->notFoundResponse(null, 'No rooms found for this profile.');
+        }
+    
+        // Extract room details
+        $rooms = $rentalAgreements->map(function ($agreement) {
+            return [
+                'room_id'        => $agreement->reservation->room->id ?? null,
+                'room_code'      => $agreement->reservation->room->room_code ?? null,
+                'rent_start_date'=> $agreement->rent_start_date,
+                'rent_end_date'  => $agreement->rent_end_date,
+            ];
+        });
+    
+        return $this->successResponse($rooms, 'Rooms retrieved successfully.');
+    }
 }

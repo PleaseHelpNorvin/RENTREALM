@@ -10,12 +10,14 @@ use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\BillingController;
 use App\Http\Controllers\rest\InquiryController;
 use App\Http\Controllers\rest\PaymentController;
+use App\Http\Controllers\rest\HandymanController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\PickedRoomController;
 use App\Http\Controllers\rest\ReservationController;
 use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\NotificationController;
 use App\Http\Controllers\rest\RentalAgreementController;
+use App\Http\Controllers\rest\MaintenanceRequestController;
 
 
 Route::post('/register-webhook', [PaymentController::class, 'registerWebhook']);
@@ -169,6 +171,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [RoomController::class, 'update']);
         Route::delete('destroy/{id}', [RoomController::class, 'destroy']);
     });
+
     Route::prefix('reservation')->group(function() {
         Route::get('index',[ReservationController::class, 'index']);
         Route::patch('updateStatus/{id}',[ReservationController::class, 'updateStatus']);
@@ -180,13 +183,22 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('store', [RentalAgreementController::class, 'store']);
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
+        Route::get('get-rooms-by-profileid/{profileId}', [RentalAgreementController::class, 'getRoomsByProfileId']);
     });
-    // Route::prefix('inquiry')->group(function () {
-    //     Route::post('store', [InquiryController::class, 'store']);
-    //     Route::get('index', [InquiryController::class, 'index']);
-    //     Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
-    //     Route::patch('update/{inquiry_id}', [InquiryController::class, 'update']);
-    // });
+
+    Route::prefix('handy_man')->group(function () {
+        Route::post('create-handyman', [AuthController::class, 'createHandyman']);
+        Route::get('index', [HandymanController::class, 'index']);
+        Route::get('show/{handymanId}', [HandymanController::class, 'show']);
+        Route::patch('terminate-handyman/{handymanId}', [HandymanController::class, 'terminateHandyman']);
+        Route::get('get-available-handyman-list', [HandymanController::class, 'getAvailableHandymanList']);
+        Route::get('get-terminated-handyman-list', [HandymanController::class, 'getTerminatedHandymanList']);
+        Route::get('get-busy-handyman-list', [HandymanController::class, 'getBusyHandymanList']);
+    });
+
+    Route::prefix('maintenance_request')->group(function () {
+        Route::get('index', [MaintenanceRequestController::class, 'index']);
+    }); 
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
