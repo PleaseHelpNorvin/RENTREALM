@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('maintenance_requests', function (Blueprint $table) {
             $table->id();
+            $table->string('ticket_code');
             $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade'); // Tenant who requested maintenance
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade'); // Room associated with the request
             $table->foreignId('handyman_id')->nullable()->constrained('handy_men')->onDelete('set null'); // Assigned handyman

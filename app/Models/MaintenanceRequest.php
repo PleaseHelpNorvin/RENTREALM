@@ -10,6 +10,7 @@ class MaintenanceRequest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'ticket_code',
         'tenant_id',
         'room_id',
         'handyman_id',
@@ -29,7 +30,6 @@ class MaintenanceRequest extends Model
         'assisted_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
-    
 
     public function tenant()
     {

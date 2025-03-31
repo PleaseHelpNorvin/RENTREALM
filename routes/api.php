@@ -198,6 +198,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('maintenance_request')->group(function () {
         Route::get('index', [MaintenanceRequestController::class, 'index']);
+        Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
     }); 
 });
 
