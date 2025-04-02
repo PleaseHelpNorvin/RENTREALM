@@ -39,6 +39,7 @@ Route::prefix('room')->group(function () {
     Route::get('show/{id}',[RoomController::class, 'show']);
     
 });
+
 Route::prefix('inquiry')->group(function(){
     Route::post('store', [InquiryController::class, 'store']);
     Route::get('index', [InquiryController::class, 'index']);
@@ -68,7 +69,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{id}', [UserController::class, 'show']);
         Route::post('update/{id}', [UserController::class, 'update']);
     });
-    
+
     Route::prefix('profile')->group(function () {
         Route::get('index', [UserProfileController::class,'index']);
         Route::post('store/{user_id}', [UserProfileController::class, 'store']);
@@ -133,10 +134,13 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('property/{property_id}', [RoomController::class, 'showRoomsByPropertyId']);
     });
 
-    // Route::prefix('rental_agreement')->group(function () {
-    //     Route::get('index', [RentalAgreementController::class,'index']);
-        // Route::get('show/{reservation_code}')
-    // });
+    Route::prefix('maintenance_request')->group(function () {
+        Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
+        Route::get('index-by-tenant-id/{tenant_id}', [MaintenanceRequestController::class, 'indexByTenantId']);
+        Route::get('show/{maintenance_request_id}', [MaintenanceRequestController::class, 'show']);
+        Route::post('update/{maintenance_request_id}', [MaintenanceRequestController::class, 'update']);
+
+    });
 
 
     Route::prefix('tenant')->group(function() {
@@ -148,9 +152,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::delete('destroybyprofile_id/{profile_id}', [TenantController::class, 'destroyByProfileId']);
     }); 
 
-    Route::prefix('maintenance')->group(function () {
-
-    });
+    
 });
 
 Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
@@ -198,7 +200,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('maintenance_request')->group(function () {
         Route::get('index', [MaintenanceRequestController::class, 'index']);
-        Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
+        Route::get('show/{maintenance_id)', [MaintenanceRequestController::class, 'show']);
+        Route::get('update/{maintenance_id)', [MaintenanceRequestController::class, 'update']);
+
+        // Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
     }); 
 });
 
