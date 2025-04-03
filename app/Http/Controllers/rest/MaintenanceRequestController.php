@@ -136,90 +136,156 @@ class MaintenanceRequestController extends Controller
 
     public function show($maintenanceRequestId)
     {
+        // Fetch the maintenance request by ID
         $maintenanceRequest = MaintenanceRequest::find($maintenanceRequestId);
-
+    
+        // If the maintenance request is not found, return a 404 response
         if (!$maintenanceRequest) {
             return $this->notFoundResponse([], 'Maintenance Request Not Found');
         }
-
-        $maintenanceRequest->images = collect($maintenanceRequest->images)->map(function ($imagePath) {
-            return asset($imagePath); 
-        })->toArray();
-
+    
+        // Decode the images JSON if it's stored as a string
+        if (is_string($maintenanceRequest->images)) {
+            $maintenanceRequest->images = json_decode($maintenanceRequest->images, true);
+        }
+    
+        // Ensure images is an array before mapping URLs
+        if (is_array($maintenanceRequest->images)) {
+            $maintenanceRequest->images = collect($maintenanceRequest->images)->map(function ($imagePath) {
+                return asset($imagePath); // Generate full URL for images
+            })->toArray();
+        }
+    
+        // Return the success response with the maintenance request
         return $this->successResponse(['maintenance_requests' => $maintenanceRequest], 'Maintenance Request Fetched Successfully');
     }
 
     public function update(Request $request, $maintenanceRequestId)
-{
-    Log::info('Request Data Before Validation:', $request->all());
+    {
+        Log::info('Request Data Before Validation:', $request->all());
 
-    // Find the existing maintenance request
-    $maintenanceRequest = MaintenanceRequest::find($maintenanceRequestId);
+        // Find the existing maintenance request
+        $maintenanceRequest = MaintenanceRequest::find($maintenanceRequestId);
 
-    if (!$maintenanceRequest) {
-        return $this->notFoundResponse(null, 'Maintenance request not found');
-    }
-
-    // Validate incoming data
-    $validator = \Validator::make($request->all(), [
-        'tenant_id' => 'nullable|integer',
-        'room_id' => 'nullable|integer',
-        'handyman_id' => 'nullable|integer',
-        'assigned_by' => 'nullable|integer',
-        'title' => 'nullable|string|max:255',
-        'description' => 'nullable|string|max:1000',
-        'images' => 'nullable|array',
-        'status' => 'nullable|string|max:255',
-        'requested_at' => 'nullable|date',
-        'assisted_at' => 'nullable|date',
-        'completed_at' => 'nullable|date',
-        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
-
-    if ($validator->fails()) {
-        Log::info('Validation Errors:', $validator->errors()->toArray());
-        return $this->validationErrorResponse($validator->errors());
-    }
-
-    // Get the validated data
-    $validatedData = $validator->validated();
-    Log::info('Validated Data:', $validatedData);
-
-    // Update only fields that are provided in the request
-    foreach ($validatedData as $key => $value) {
-        // Ensure that we only update if the value is not null
-        if ($value !== null) {
-            // Special case for the images field - we handle it separately
-            if ($key == 'images') {
-                // Check if images is a string and decode it, else use it directly if it's already an array
-                $existingImages = is_string($maintenanceRequest->images) ? json_decode($maintenanceRequest->images, true) : $maintenanceRequest->images ?? [];
-                $imagePaths = [];
-
-                // Add new images if they exist in the request
-                if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $image) {
-                        $imagePath = $image->store('maintenance_request_images', 'public');
-                        $imagePaths[] = $imagePath;
-                    }
-                    $existingImages = array_merge($existingImages, $imagePaths);
-                }
-
-                // Store the updated images as a JSON-encoded string
-                $maintenanceRequest->images = json_encode($existingImages);
-            } else {
-                // For all other fields, update directly
-                $maintenanceRequest->{$key} = $value;
-            }
+        if (!$maintenanceRequest) {
+            return $this->notFoundResponse(null, 'Maintenance request not found');
         }
+
+        // Validate incoming data
+        $validator = \Validator::make($request->all(), [
+            'tenant_id' => 'nullable|integer',
+            'room_id' => 'nullable|integer',
+            'handyman_id' => 'nullable|integer',
+            'assigned_by' => 'nullable|integer',
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'images' => 'nullable|array',
+            'status' => 'nullable|string|max:255',
+            'requested_at' => 'nullable|date',
+            'assisted_at' => 'nullable|date',
+            'completed_at' => 'nullable|date',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            Log::info('Validation Errors:', $validator->errors()->toArray());
+            return $this->validationErrorResponse($validator->errors());
+        }
+
+        // Get the validated data
+        $validatedData = $validator->validated();
+        Log::info('Validated Data:', $validatedData);
+
+        // Update the fields directly
+        $maintenanceRequest->fill($validatedData);
+
+        // Handle image uploads separately
+        if ($request->hasFile('images')) {
+            $imagePaths = [];
+            
+            // Generate ticket code (use the same format as in the create method)
+            $date = now()->format('Ymd');
+            $randomNumber = mt_rand(10000, 99999);
+            $ticketCode = "MR-{$date}-{$randomNumber}";
+
+            $storagePath = public_path('storage/maintenance_request_images');
+            if (!file_exists($storagePath)) {
+                mkdir($storagePath, 0777, true); // create directory if it doesn't exist
+                Log::info('Storage path created:', ['path' => $storagePath]);
+            }
+
+            $counter = 1;
+            foreach ($request->file('images') as $image) {
+                try {
+                    // Generate the image name based on ticket code and counter
+                    $extension = $image->getClientOriginalExtension();
+                    $imageName = "{$ticketCode}_{$counter}.{$extension}";
+
+                    // Move the image to the storage path
+                    $image->move($storagePath, $imageName);
+                    $imagePaths[] = 'storage/maintenance_request_images/' . $imageName; // save relative path
+
+                    Log::info('Image successfully uploaded:', [
+                        'image_name' => $imageName,
+                        'path' => 'storage/maintenance_request_images/' . $imageName
+                    ]);
+
+                    $counter++; // increment counter for each image
+                } catch (\Exception $e) {
+                    Log::error('Error uploading image', [
+                        'image_error' => $e->getMessage(),
+                        'image_index' => $counter
+                    ]);
+                }
+            }
+
+            // Encode the image paths as JSON
+            $maintenanceRequest->images = json_encode($imagePaths); // Store paths as JSON array
+        }
+
+        // Save the updated maintenance request
+        $maintenanceRequest->save();
+
+        // Return success response
+        return $this->successResponse(['maintenance_requests' => [$maintenanceRequest]], 'Maintenance request updated successfully');
     }
-
-    // Save the updated maintenance request
-    $maintenanceRequest->save();    
-
-    // Return success response
-    return $this->successResponse($maintenanceRequest, 'Maintenance request updated successfully');
-}
-
     
     
+    public function updateStatusToCancel(Request $request, $maintenance_request_id)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'status' => 'required|string|in:pending,completed,cancelled', // Define allowed status values
+        ]);
+
+        // Find the maintenance request by its ID
+        $maintenanceRequest = MaintenanceRequest::find($maintenance_request_id);
+
+        if (!$maintenanceRequest) {
+            // Return a 404 if the maintenance request isn't found
+            return $this->notFoundResponse(null, 'Maintenance request not found');
+        }
+
+        // Update the status
+        $maintenanceRequest->status = $request->status;
+        $maintenanceRequest->save();
+
+         // Decode the images JSON if it's stored as a string
+         if (is_string($maintenanceRequest->images)) {
+            $maintenanceRequest->images = json_decode($maintenanceRequest->images, true);
+        }
+    
+        // Ensure images is an array before mapping URLs
+        if (is_array($maintenanceRequest->images)) {
+            $maintenanceRequest->images = collect($maintenanceRequest->images)->map(function ($imagePath) {
+                return asset($imagePath); // Generate full URL for images
+            })->toArray();
+        }
+    
+
+        // Return a success response
+        // return response()->json(['message' => 'Maintenance request status updated successfully', 'data' => $maintenanceRequest], 200);
+        return $this->successResponse(['maintenance_requests' => $maintenanceRequest], 'Maintenance request updated successfully');
+
+    }
 }

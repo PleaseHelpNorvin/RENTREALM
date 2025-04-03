@@ -139,6 +139,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index-by-tenant-id/{tenant_id}', [MaintenanceRequestController::class, 'indexByTenantId']);
         Route::get('show/{maintenance_request_id}', [MaintenanceRequestController::class, 'show']);
         Route::post('update/{maintenance_request_id}', [MaintenanceRequestController::class, 'update']);
+        Route::patch('cancel/{maintenance_request_id}', [MaintenanceRequestController::class, 'updateStatusToCancel']);
 
     });
 
