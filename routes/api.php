@@ -210,5 +210,14 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
      
+    Route::prefix('handy_man')->group(function () {
+        Route::get('index', [HandymanController::class, 'index']);
+    });
 
+    Route::prefix('maintenance_request')->group(function () {
+        Route::get('get-maintenance-request-by-handymanId/{handymanId}', [MaintenanceRequestController::class, 'getMaintenanceRequestByHandymanId']);
+        Route::get('get-maintenance-request', [MaintenanceRequestController::class, 'getMaintenanceRequestList']);
+        Route::get('get-pending-maintenance-request', [MaintenanceRequestController::class, 'getPendingMaintenanceRequestList']);
+
+    });
 });

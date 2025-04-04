@@ -288,4 +288,122 @@ class MaintenanceRequestController extends Controller
         return $this->successResponse(['maintenance_requests' => $maintenanceRequest], 'Maintenance request updated successfully');
 
     }
+
+    public function getMaintenanceRequestByHandymanId($handymanId) {
+        $maintenanceRequestByHandymanIdList = MaintenanceRequest::with('tenant', 'room', 'handyman', 'assignedBy')
+            ->where('handyman_id', $handymanId)
+            ->get(); 
+    
+        if ($maintenanceRequestByHandymanIdList->isEmpty()) {
+            return $this->notFoundResponse([], 'No maintenance request for this handyman found');
+        }
+    
+        $maintenanceRequestByHandymanIdList->each(function ($maintenanceRequest) {
+            $maintenanceRequest->images = collect(json_decode($maintenanceRequest->images, true))
+                ->map(function ($imagePath) {
+                    return strpos($imagePath, 'http') === 0 ? $imagePath : url($imagePath);
+                });
+    
+            $maintenanceRequest->room->room_picture_url = collect(json_decode($maintenanceRequest->room->room_picture_url, true))
+                ->map(function ($imagePath) {
+                    return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
+                });
+        });
+    
+        return $this->successResponse(
+            ['maintenance_requests' => $maintenanceRequestByHandymanIdList],
+            'Maintenance requests by handymanId fetched successfully'
+        );
+    }
+
+    public function getMaintenanceRequestList() {
+        $maintenanceRequest = MaintenanceRequest::with('tenant', 'room', 'handyman', 'assignedBy')
+            ->get();
+    
+        if ($maintenanceRequest->isEmpty()) {
+            return $this->notFoundResponse([], 'No pending maintenance requests found');
+        }
+    
+        // Loop through the maintenance requests to adjust the URLs for images and room pictures
+        $maintenanceRequest->each(function ($maintenanceRequest) {
+            // Handling the 'images' field
+            if (is_string($maintenanceRequest->images)) {
+                // Decode the JSON string into an array
+                $maintenanceRequest->images = json_decode($maintenanceRequest->images, true);
+            }
+    
+            // Ensure images is an array before processing
+            if (is_array($maintenanceRequest->images)) {
+                $maintenanceRequest->images = collect($maintenanceRequest->images)
+                    ->map(function ($imagePath) {
+                        // Check if the image path already contains 'http', otherwise prepend the base URL
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url($imagePath);
+                    })->toArray();
+            }
+    
+            // Handling the 'room_picture_url' field
+            if (is_string($maintenanceRequest->room->room_picture_url)) {
+                // If it's a string (possibly JSON), decode it into an array
+                $maintenanceRequest->room->room_picture_url = json_decode($maintenanceRequest->room->room_picture_url, true);
+            }
+            
+            if (is_array($maintenanceRequest->room->room_picture_url)) {
+                // Map through the array of image paths and ensure they are valid URLs
+                $maintenanceRequest->room->room_picture_url = collect($maintenanceRequest->room->room_picture_url)
+                    ->map(function ($imagePath) {
+                        // Check if the image path already contains 'http', otherwise prepend the base URL
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
+                    })->toArray();
+            }
+        });
+    
+        return $this->successResponse(
+            ['maintenance_requests' => $maintenanceRequest],
+            'Maintenance requests fetched successfully'
+        );
+    }
+    
+    
+    
+    public function getPendingMaintenanceRequestList() {
+        $maintenanceRequest = MaintenanceRequest::with('tenant', 'room', 'handyman', 'assignedBy')
+            ->where('status', 'pending')    
+            ->get(); 
+    
+        // Corrected this line: removing the extra '$'
+        if ($maintenanceRequest->isEmpty()) {
+            return $this->notFoundResponse([], 'No pending maintenance requests found');
+        }
+    
+        // Loop through the maintenance requests to adjust the URLs for images and room pictures
+        $maintenanceRequest->each(function ($maintenanceRequest) {
+            // Handling the 'images' field
+            if (is_array($maintenanceRequest->images)) {
+                $maintenanceRequest->images = collect($maintenanceRequest->images)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url($imagePath);
+                    });
+            }
+    
+            // Handling the 'room_picture_url' field
+            if (is_string($maintenanceRequest->room->room_picture_url)) {
+                // If it's a string (possibly JSON), decode it
+                $maintenanceRequest->room->room_picture_url = json_decode($maintenanceRequest->room->room_picture_url, true);
+            }
+            
+            if (is_array($maintenanceRequest->room->room_picture_url)) {
+                // Map through the array of image paths and ensure they are valid URLs
+                $maintenanceRequest->room->room_picture_url = collect($maintenanceRequest->room->room_picture_url)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
+                    })->toArray();
+            }
+        });
+    
+        return $this->successResponse(
+            ['maintenance_requests' => $maintenanceRequest],
+            'Pending maintenance requests fetched successfully'
+        );
+    }
+    
 }
