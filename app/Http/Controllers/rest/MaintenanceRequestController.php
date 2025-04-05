@@ -354,5 +354,106 @@ class MaintenanceRequestController extends Controller
         );
     }
     
+    public function patchMaintenanceRequestToRequested(Request $request, $maintenanceRequestId, $handymanId)
+    {
+        $maintenanceRequest = MaintenanceRequest::with([
+            'tenant.userProfile.user',
+            'room',
+            'handyman',
+            'assignedBy'
+        ])->findOrFail($maintenanceRequestId);
+
+        $maintenanceRequest->status = 'requested';
+        $maintenanceRequest->handyman_id = $handymanId;
+        $maintenanceRequest->requested_at = now();
+        $maintenanceRequest->save();
+
+        return $this->successResponse(
+            ['maintenance_requests' => [$maintenanceRequest]],
+            'Maintenance request status updated successfully.'
+        );
+    }
+
+
+    public function getMaintenanceRequestListRequested() {
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy')
+            ->where('status', 'requested')
+            ->get();
+    
+        if ($maintenanceRequest->isEmpty()) {
+            return $this->notFoundResponse([], 'No pending maintenance requests found');
+        }
+    
+        $maintenanceRequest->each(function ($maintenanceRequest) {
+            if (is_string($maintenanceRequest->images)) {
+                $maintenanceRequest->images = json_decode($maintenanceRequest->images, true);
+            }
+    
+            if (is_array($maintenanceRequest->images)) {
+                $maintenanceRequest->images = collect($maintenanceRequest->images)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url($imagePath);
+                    })->toArray();
+            }
+    
+            if (is_string($maintenanceRequest->room->room_picture_url)) {
+                $maintenanceRequest->room->room_picture_url = json_decode($maintenanceRequest->room->room_picture_url, true);
+            }
+            
+            if (is_array($maintenanceRequest->room->room_picture_url)) {
+                $maintenanceRequest->room->room_picture_url = collect($maintenanceRequest->room->room_picture_url)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
+                    })->toArray();
+            }
+        });
+    
+        return $this->successResponse(
+            ['maintenance_requests' => $maintenanceRequest],
+            'Maintenance requests with a status of requested fetched successfully'
+        );
+    }
+    
+    public function getMaintenanceRequestListRequestedByHandymanId($handymanId) {
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy')
+            ->where('status', 'requested')
+            ->where('handyman_id', $handymanId)
+            ->get();
+    
+        if ($maintenanceRequest->isEmpty()) {
+            return $this->notFoundResponse([], 'No pending maintenance requests found');
+        }
+    
+        $maintenanceRequest->each(function ($maintenanceRequest) {
+            if (is_string($maintenanceRequest->images)) {
+                $maintenanceRequest->images = json_decode($maintenanceRequest->images, true);
+            }
+    
+            if (is_array($maintenanceRequest->images)) {
+                $maintenanceRequest->images = collect($maintenanceRequest->images)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url($imagePath);
+                    })->toArray();
+            }
+    
+            if (is_string($maintenanceRequest->room->room_picture_url)) {
+                $maintenanceRequest->room->room_picture_url = json_decode($maintenanceRequest->room->room_picture_url, true);
+            }
+            
+            if (is_array($maintenanceRequest->room->room_picture_url)) {
+                $maintenanceRequest->room->room_picture_url = collect($maintenanceRequest->room->room_picture_url)
+                    ->map(function ($imagePath) {
+                        return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
+                    })->toArray();
+            }
+        });
+    
+        return $this->successResponse(
+            ['maintenance_requests' => $maintenanceRequest],
+            'Maintenance requests with a status of requested fetched successfully'
+        );
+    }
+
+    
     
 }

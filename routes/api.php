@@ -46,21 +46,7 @@ Route::prefix('inquiry')->group(function(){
     Route::get('show/{inquiry_id}', [InquiryController::class, 'show']);
 });
 
-
-// Route::post('/webhook/paymongo', function (Request $request) {
-//     $payload = $request->json();
-
-//     if ($payload['data']['attributes']['status'] === 'paid') {
-//         $paymentId = $payload['data']['id'];
-
-//         Payment::where('payment_reference', $paymentId)
-//             ->update(['status' => 'paid']);
-//     }
-
-//     return response()->json(['message' => 'Webhook received'], 200);
-// });
 Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
-
 
 // Protected routes with 'api' prefix and Sanctum middleware
 Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
@@ -203,6 +189,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [MaintenanceRequestController::class, 'index']);
         Route::get('show/{maintenance_id)', [MaintenanceRequestController::class, 'show']);
         Route::get('update/{maintenance_id)', [MaintenanceRequestController::class, 'update']);
+        Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
+        Route::get('get-requested-maintenance-requests', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequested']);
+
+        
 
         // Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
     }); 
@@ -218,6 +208,8 @@ Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
         Route::get('get-maintenance-request-by-handymanId/{handymanId}', [MaintenanceRequestController::class, 'getMaintenanceRequestByHandymanId']);
         Route::get('get-maintenance-request', [MaintenanceRequestController::class, 'getMaintenanceRequestList']);
         Route::get('get-pending-maintenance-request', [MaintenanceRequestController::class, 'getPendingMaintenanceRequestList']);
+        Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
+        Route::get('get-requested-maintenance-request/{handyman_id}', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequestedByHandymanId']);
 
     });
 });
