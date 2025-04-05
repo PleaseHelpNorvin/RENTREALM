@@ -31,6 +31,12 @@ class MaintenanceRequest extends Model
         'completed_at' => 'datetime',
     ];
 
+    // protected $hidden = [
+    //     'tenant_id',
+    //     'room_id',
+    //     'handyman_id',
+    // ];
+
     public function tenant()
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');

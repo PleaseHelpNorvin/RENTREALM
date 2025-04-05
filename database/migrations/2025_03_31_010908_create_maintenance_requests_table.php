@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('title'); // Short title of the request
             $table->text('description'); // Detailed description
             $table->json('images')->nullable(); // JSON column to store image URLs
-            $table->enum('status', ['pending','assigned','in_progress', 'completed', 'cancelled'])->default('pending'); // Status tracking
+            $table->enum('status', ['pending','requested','assigned','in_progress', 'completed', 'cancelled'])->default('pending'); // Status tracking
             $table->dateTime('requested_at')->useCurrent(); // When the request was created
             $table->timestamp('assisted_at')->nullable();
             $table->dateTime('completed_at')->nullable(); // When the request was completed
