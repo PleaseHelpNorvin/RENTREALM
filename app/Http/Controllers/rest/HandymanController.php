@@ -20,6 +20,17 @@ class HandymanController extends Controller
         return $this->successResponse(['handymans' => $handymans], 'Handyman Fetched Successfully');
     }
 
+    public function showHandymanByUserId($userId)
+    {
+        $handymans = Handyman::with('user')->where('user_id', $userId)->get();
+
+        if ($handymans->isEmpty()) {
+            return $this->notFoundResponse([], 'No handyman found');
+        }
+        return $this->successResponse(['handymans' => $handymans], 'Handyman Fetched Successfully');
+
+    }
+
     public function getBusyHandymanList()
     {
         $handymans = Handyman::with('user')->where('status', 'busy')->get();
@@ -61,7 +72,7 @@ class HandymanController extends Controller
             return $this->notFoundResponse([], 'Handyman not found');
         }
 
-        return $this->successResponse(['handyman' => $handyman], 'Handyman fetched successfully');
+        return $this->successResponse(['handymans' => [$handyman]], 'Handyman fetched successfully');
     }
 
     

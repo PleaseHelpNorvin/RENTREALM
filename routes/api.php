@@ -202,6 +202,9 @@ Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
      
     Route::prefix('handy_man')->group(function () {
         Route::get('index', [HandymanController::class, 'index']);
+        Route::get('show-handyman-by-user-id/{user_id}', [HandymanController::class, 'showHandymanByUserId']);
+
+        
     });
 
     Route::prefix('maintenance_request')->group(function () {
