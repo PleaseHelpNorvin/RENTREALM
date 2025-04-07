@@ -317,7 +317,7 @@ class MaintenanceRequestController extends Controller
     }
 
     public function getMaintenanceRequestList() {
-        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy')
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room.property.address', 'handyman', 'assignedBy')
             ->get();
     
         if ($maintenanceRequest->isEmpty()) {
@@ -356,13 +356,15 @@ class MaintenanceRequestController extends Controller
     
     public function patchMaintenanceRequestToRequested(Request $request, $maintenanceRequestId, $handymanId)
     {
+
         $maintenanceRequest = MaintenanceRequest::with([
             'tenant.userProfile.user',
             'room',
             'handyman',
             'assignedBy'
         ])->findOrFail($maintenanceRequestId);
-
+        
+        
         $maintenanceRequest->status = 'requested';
         $maintenanceRequest->handyman_id = $handymanId;
         $maintenanceRequest->requested_at = now();
@@ -454,6 +456,108 @@ class MaintenanceRequestController extends Controller
         );
     }
 
+    public function patchMaintenanceRequestToAssigned(Request $request, $maintenanceRequestId, $handymanId, $adminId)
+    {
+
+        $maintenanceRequest = MaintenanceRequest::with([
+            'tenant.userProfile.user',
+            'room',
+            'handyman',
+            'assignedBy'
+        ])->findOrFail($maintenanceRequestId);
+        
+        
+        $maintenanceRequest->status = 'Assigned';
+        $maintenanceRequest->handyman_id = $handymanId;
+        $maintenanceRequest->assigned_by = $adminId;
+        // $maintenanceRequest->assisted_at = now();
+        $maintenanceRequest->save();
+
+        return $this->successResponse(
+            ['maintenance_requests' => [$maintenanceRequest]],
+            'Maintenance request status updated to assigned successfully.'
+        );
+    }
+
     
-    
+    public function patchMaintenanceRequestToInProgress(Request $request, $maintenanceRequestId)
+    {
+        $maintenanceRequest = MaintenanceRequest::with([
+            'tenant.userProfile.user',
+            'room',
+            'handyman',
+            'assignedBy'
+        ])->findOrFail($maintenanceRequestId);
+
+        $handymanId = $maintenanceRequest->handyman_id;
+
+        // Check if handyman has other in_progress request
+        $ongoingRequest = MaintenanceRequest::where('handyman_id', $handymanId)
+            ->where('status', 'in_progress')
+            ->where('id', '!=', $maintenanceRequestId)
+            ->first();
+
+        if ($ongoingRequest) {
+            return $this->errorResponse(
+                [] ,'Handyman is still busy with another maintenance request.',
+                400
+            );
+        }
+
+        // Safe to proceed
+        $maintenanceRequest->status = 'in_progress';
+        $maintenanceRequest->assisted_at = now();
+        $maintenanceRequest->save();
+
+        // Update handyman status to busy
+        $handyman = Handyman::find($handymanId);
+        $handyman->status = 'busy';
+        $handyman->save();
+
+        return $this->successResponse(
+            ['maintenance_requests' => [$maintenanceRequest]],
+            'Maintenance request status updated to in progress successfully.'
+        );
+    }
+
+    public function patchMaintenanceRequestToComplete(Request $request, $maintenanceRequestId)
+    {
+        $maintenanceRequest = MaintenanceRequest::with([
+            'tenant.userProfile.user',
+            'room',
+            'handyman',
+            'assignedBy'
+        ])->findOrFail($maintenanceRequestId);
+
+        $handymanId = $maintenanceRequest->handyman_id;
+
+        // Check if handyman has other in_progress request
+        $ongoingRequest = MaintenanceRequest::where('handyman_id', $handymanId)
+            ->where('status', 'in_progress')
+            ->where('id', '!=', $maintenanceRequestId)
+            ->first();
+
+        if ($ongoingRequest) {
+            return $this->errorResponse(
+                [] ,'Handyman is still busy with another maintenance request.',
+                400
+            );
+        }
+
+        // Safe to proceed
+        $maintenanceRequest->status = 'completed';
+        $maintenanceRequest->completed_at = now();
+        $maintenanceRequest->save();
+
+        // Update handyman status to busy
+        $handyman = Handyman::find($handymanId);
+        $handyman->status = 'available';
+        $handyman->save();
+
+        return $this->successResponse(
+            ['maintenance_requests' => [$maintenanceRequest]],
+            'Maintenance request status updated to completed successfully.'
+        );
+    }
+
 }

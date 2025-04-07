@@ -191,6 +191,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('update/{maintenance_id)', [MaintenanceRequestController::class, 'update']);
         Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
         Route::get('get-requested-maintenance-requests', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequested']);
+        Route::patch('patch-maintenance-request-to-assigned/{maintenance_request_id}/{handyman_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToAssigned']);
 
         
 
@@ -203,8 +204,6 @@ Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
     Route::prefix('handy_man')->group(function () {
         Route::get('index', [HandymanController::class, 'index']);
         Route::get('show-handyman-by-user-id/{user_id}', [HandymanController::class, 'showHandymanByUserId']);
-
-        
     });
 
     Route::prefix('maintenance_request')->group(function () {
@@ -213,6 +212,9 @@ Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
         Route::get('get-pending-maintenance-request', [MaintenanceRequestController::class, 'getPendingMaintenanceRequestList']);
         Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
         Route::get('get-requested-maintenance-request/{handyman_id}', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequestedByHandymanId']);
+        Route::patch('patch-maintenance-request-to-in-progress/{maintenance_request_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToInProgress']);
+        Route::patch('patch-maintenance-request-to-in-complete/{maintenance_request_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
+        // Route::patch('')
 
     });
 });
