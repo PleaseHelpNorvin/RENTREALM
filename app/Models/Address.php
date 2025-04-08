@@ -42,7 +42,7 @@ class Address extends Model
         $response = Http::withoutVerifying()->get($url);
         $data = $response->json();
 
-        \Log::info('GoMaps API Response:', $data);
+        // \Log::info('GoMaps API Response:', $data);
 
         if (!empty($data['results'][0]['geometry']['location'])) {
             return [

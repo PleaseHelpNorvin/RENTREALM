@@ -1,11 +1,12 @@
 <?php
 namespace App\Http\Controllers\rest;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Property;
-use App\Models\Address;
 use App\Models\Room;
+use App\Models\Address;
+use App\Models\Property;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 class PropertyController extends Controller
 {
@@ -35,7 +36,7 @@ class PropertyController extends Controller
     // Store a new property
     public function store(Request $request)
     {
-        \Log::info($request->all());
+        \Log::info('Incoming request data', ['data' => $request->all()]);
     
         // Validate input
         $validatedData = $request->validate([
@@ -110,7 +111,7 @@ class PropertyController extends Controller
     // Update an existing property
     public function update(Request $request, $id)
     {
-        \Log::info($request->all());
+        Log::info($request->all());
         // Validate input
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',

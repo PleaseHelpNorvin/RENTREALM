@@ -66,7 +66,7 @@ class RentalAgreementController extends Controller
         if (!file_exists($directory)) {
             mkdir($directory, 0755, true);  // Create directory if it doesn't exist
         }
-    
+        
         // Handle the file upload
         $signaturePath = $request->file('signature_png_string')->storeAs('contract_signatures', $agreementCode . '.png', 'public');
     
@@ -77,7 +77,8 @@ class RentalAgreementController extends Controller
         
         // Create Rental Agreement
         $rentalAgreement = RentalAgreement::create($validatedData);
-        
+
+
         // Generate PDF in the background 
         $this->generatePdfContract($rentalAgreement);
         
@@ -338,7 +339,7 @@ class RentalAgreementController extends Controller
                 'rent_start_date'=> $agreement->rent_start_date,
                 'rent_end_date'  => $agreement->rent_end_date,
             ];
-        });
+        })->unique('room_id')->values();;
     
         return $this->successResponse($rooms, 'Rooms retrieved successfully.');
     }

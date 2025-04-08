@@ -8,7 +8,9 @@ use App\Models\Billing;
 use App\Models\Payment;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\RentalAgreement;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Jobs\CheckFailedPayment;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
@@ -20,7 +22,33 @@ class PaymentController extends Controller
         $payments = Payment::get();
         return $this->successResponse(['payments' => $payments], "fetched payments");
     }
-    
+
+    public function checkFailPayment(Request $request, $userId)
+    {
+        $latestRentalAgreement = RentalAgreement::whereHas('reservation.userProfile', function($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })
+        ->latest('created_at')
+        ->first();
+
+        if (!$latestRentalAgreement) {
+            return $this->notFoundResponse([], 'No rental agreement found');
+        }
+
+        $billing = Billing::where('billable_type', RentalAgreement::class)
+            ->where('billable_id', $latestRentalAgreement->id)
+            ->first();
+
+        Log::info('Dispatching CheckFailedPayment job', ['user_id' => $userId, 'billing_id' => $billing->id]);
+        CheckFailedPayment::dispatch($userId, $billing->id)->delay(now()->addMinutes(2));
+
+
+        return $this->successResponse([
+            'unpaid_rental_agreement' => $latestRentalAgreement,
+            'pending_billing' => $billing
+        ], 'unpaid Rental agreement and billing found');
+    }
+
     
 
     public function processPayment(Request $request)
@@ -163,8 +191,7 @@ class PaymentController extends Controller
                 return response()->json([
                     'payment_id' => $paymentId,
                     'status' => $paymentStatus,
-                    'paymongo_payment_number' => $paymentId,
-                    ''
+                    'paymongo_payment_number' => $paymentId, 
                 ]);
             } else {
                 Log::error("PayMongo API request failed", [
@@ -204,6 +231,8 @@ class PaymentController extends Controller
         if (!$billing) {
             return response()->json(['message' => 'Billing not found'], 404);
         }
+        
+        
     
         // ✅ Fix: Prevent error if no files are uploaded
         $paymentProofsUrls = [];
@@ -212,6 +241,8 @@ class PaymentController extends Controller
                 $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
             }
         }
+
+        
     
         // 💰 Create Payment Record
         $payment = Payment::create([
@@ -232,7 +263,16 @@ class PaymentController extends Controller
     
         if ($billing->remaining_balance <= 0) {
             $billing->status = 'paid';
-        } elseif ($billing->remaining_balance > 0) { // ✅ Fix: Check balance, not amount_paid
+            if ($billing->billable_type === RentalAgreement::class) {
+                $rentalAgreement = RentalAgreement::find($billing->billable_id);
+        
+                if ($rentalAgreement && $rentalAgreement->reservation && $rentalAgreement->reservation->room) {
+                    $room = $rentalAgreement->reservation->room;
+                    $room->status = 'occupied'; // Mark room as occupied
+                    $room->save();
+                }
+            }
+        } else if ($billing->remaining_balance > 0) { // ✅ Fix: Check balance, not amount_paid
             $billing->status = 'partial';
         }
     
@@ -240,7 +280,7 @@ class PaymentController extends Controller
     
         // 🏠 Create or Update Tenant
         $status = ($billing->status === 'paid') ? 'active' : 'pending';
-    
+
         // ✅ Fix: Check if Tenant already exists before creating a new one
         $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
         if ($tenant) {

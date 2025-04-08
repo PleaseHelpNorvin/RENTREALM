@@ -17,7 +17,6 @@ class RentalAgreement extends Model
         'rent_start_date',
         'rent_end_date',
 
-        // 'rent_price',
         'person_count',
         'total_amount',
 

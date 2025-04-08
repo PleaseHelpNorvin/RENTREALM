@@ -24,5 +24,5 @@ class Notification extends Model
     public function notifiable()
     {
         return $this->morphTo();
-    }
+    } 
 }

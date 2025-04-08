@@ -89,7 +89,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::post('process-payment', [PaymentController::class, 'processPayment']);
         Route::get('retrieve-payment/{billingId}', [PaymentController::class,'retrievePayment']);
         Route::get('retrieve-receipt/{profileId}', [PaymentController::class, 'getAllReceiptUrlsByProfileId']);
-
+        Route::get('check-fail-payment/{user_id}', [PaymentController::class, 'checkFailPayment']);
     });
 
     Route::prefix('notification')->group(function() {

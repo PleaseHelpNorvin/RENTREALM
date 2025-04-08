@@ -91,7 +91,10 @@ To start the Laravel development server, run:
 ```sh
 php artisan serve --host=0.0.0.0 --port=8000
 ```
-
+### for starting queue
+```sh
+php artisan queue:work
+```
 ### Handling CORS Issues
 
 If CORS is missing in the configuration, publish it using:

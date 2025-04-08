@@ -37,6 +37,7 @@ class BillingController extends Controller
             ->where('billable_type', 'App\\Models\\RentalAgreement')
             ->get();
 
+
         if ($billing->isEmpty()) {
             return $this->notFoundResponse([], 'No billing records found for this rental agreement');
         }

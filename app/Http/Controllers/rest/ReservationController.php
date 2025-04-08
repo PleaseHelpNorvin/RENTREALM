@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\rest;
 
+use App\Models\Room;
 use App\Models\User;
 use App\Models\Reservation;
 use Illuminate\Support\Str;
@@ -52,7 +53,7 @@ class ReservationController extends Controller
             foreach ($request->file('reservation_payment_proof_url') as $file) {
                 $proofUrls[] = $file->store('reservation_payment_proofs', 'public');
             }
-        }
+        }   
 
         // Save the reservation
         $reservation = Reservation::create([
@@ -63,6 +64,11 @@ class ReservationController extends Controller
             'reservation_payment_proof_url' => json_encode($proofUrls),
             'status' => 'pending',
         ]);
+
+        $room = Room::find($validatedData['room_id']);
+        $room->status = 'reserved'; // or whatever status
+        $room->save();
+    
 
         $reservation->notifications()->create([
             'user_id' => $reservation->userProfile->user->id,
@@ -93,6 +99,15 @@ class ReservationController extends Controller
             'approved_by' => $validatedData['approved_by'],
             'approval_date' => now(),
         ]);
+
+        $room = Room::find($reservation->room_id);
+
+        if ($validatedData['status'] == 'pending') {
+            $room->status = 'vacant'; // or 'occupied'
+        } 
+
+        $room->save();
+
 
         $adminId = $reservation->approved_by;
         $adminName = User::find($adminId)->name;
