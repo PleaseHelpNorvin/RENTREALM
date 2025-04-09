@@ -21,7 +21,9 @@ class MaintenanceRequest extends Model
         'status',
         'requested_at',
         'assisted_at',
+        'approved_at',
         'completed_at',
+        'approved_by',
     ];
 
     protected $casts = [
@@ -29,6 +31,8 @@ class MaintenanceRequest extends Model
         'requested_at' => 'datetime',
         'assisted_at' => 'datetime',
         'completed_at' => 'datetime',
+        'assigned_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     // protected $hidden = [
@@ -55,5 +59,9 @@ class MaintenanceRequest extends Model
     public function assignedBy()
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

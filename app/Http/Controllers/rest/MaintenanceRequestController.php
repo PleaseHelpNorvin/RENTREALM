@@ -317,7 +317,7 @@ class MaintenanceRequestController extends Controller
     }
 
     public function getMaintenanceRequestList() {
-        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room.property.address', 'handyman', 'assignedBy')
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room.property.address', 'handyman', 'assignedBy', 'approvedBy')
             ->get();
     
         if ($maintenanceRequest->isEmpty()) {
@@ -346,6 +346,9 @@ class MaintenanceRequestController extends Controller
                         return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
                     })->toArray();
             }
+
+            $maintenanceRequest->approvedBy = $maintenanceRequest->approvedBy ?? null;
+
         });
     
         return $this->successResponse(
@@ -378,7 +381,7 @@ class MaintenanceRequestController extends Controller
 
 
     public function getMaintenanceRequestListRequested() {
-        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy')
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy', 'approvedBy')
             ->where('status', 'requested')
             ->get();
     
@@ -408,6 +411,8 @@ class MaintenanceRequestController extends Controller
                         return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
                     })->toArray();
             }
+            $maintenanceRequest->approvedBy = $maintenanceRequest->approvedBy ?? null;
+
         });
     
         return $this->successResponse(
@@ -417,7 +422,7 @@ class MaintenanceRequestController extends Controller
     }
     
     public function getMaintenanceRequestListRequestedByHandymanId($handymanId) {
-        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy')
+        $maintenanceRequest = MaintenanceRequest::with('tenant.userProfile.user', 'room', 'handyman', 'assignedBy', 'approvedBy')
             ->where('status', 'requested')
             ->where('handyman_id', $handymanId)
             ->get();
@@ -448,6 +453,8 @@ class MaintenanceRequestController extends Controller
                         return strpos($imagePath, 'http') === 0 ? $imagePath : url('storage/' . $imagePath);
                     })->toArray();
             }
+            $maintenanceRequest->approvedBy = $maintenanceRequest->approvedBy ?? null;
+ 
         });
     
         return $this->successResponse(
@@ -470,7 +477,7 @@ class MaintenanceRequestController extends Controller
         $maintenanceRequest->status = 'Assigned';
         $maintenanceRequest->handyman_id = $handymanId;
         $maintenanceRequest->assigned_by = $adminId;
-        // $maintenanceRequest->assisted_at = now();
+        $maintenanceRequest->assigned_at = now();
         $maintenanceRequest->save();
 
         return $this->successResponse(
@@ -520,7 +527,7 @@ class MaintenanceRequestController extends Controller
         );
     }
 
-    public function patchMaintenanceRequestToComplete(Request $request, $maintenanceRequestId)
+    public function patchMaintenanceRequestToForApprove(Request $request, $maintenanceRequestId)
     {
         $maintenanceRequest = MaintenanceRequest::with([
             'tenant.userProfile.user',
@@ -545,7 +552,7 @@ class MaintenanceRequestController extends Controller
         }
 
         // Safe to proceed
-        $maintenanceRequest->status = 'completed';
+        $maintenanceRequest->status = 'forApprove';
         $maintenanceRequest->completed_at = now();
         $maintenanceRequest->save();
 
@@ -556,8 +563,50 @@ class MaintenanceRequestController extends Controller
 
         return $this->successResponse(
             ['maintenance_requests' => [$maintenanceRequest]],
+            'Maintenance request status updated to for approve successfully.'
+        );
+    }
+
+    public function patchMaintenanceRequestToComplete(Request $request, $maintenanceRequestId, $adminId)
+    {
+        $maintenanceRequest = MaintenanceRequest::with([
+            'tenant.userProfile.user',
+            'room',
+            'handyman',
+            'assignedBy'
+        ])->findOrFail($maintenanceRequestId);
+
+        $handymanId = $maintenanceRequest->handyman_id;
+
+        // Check if handyman has other in_progress request
+        $ongoingRequest = MaintenanceRequest::where('handyman_id', $handymanId)
+            ->where('status', 'forApprove')
+            ->where('id', '!=', $maintenanceRequestId)
+            ->first();
+
+        if ($ongoingRequest) {
+            return $this->errorResponse(
+                [] ,'Handyman is still busy with another maintenance request.',
+                400
+            );
+        }
+
+        // Safe to proceed
+        $maintenanceRequest->status = 'completed';
+        $maintenanceRequest->approved_by = $adminId;
+        $maintenanceRequest->approved_at = now();
+        $maintenanceRequest->save();
+
+        // Update handyman status to busy
+        // $handyman = Handyman::find($handymanId);
+        // $handyman->status = 'available';
+        // $handyman->save();
+
+        return $this->successResponse(
+            ['maintenance_requests' => [$maintenanceRequest]],
             'Maintenance request status updated to completed successfully.'
         );
     }
 
+    
 }

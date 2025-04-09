@@ -103,4 +103,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(MaintenanceRequest::class, 'assigned_by');
     }
+    public function ApproveRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'approved_by');
+    }
 }

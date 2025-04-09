@@ -18,12 +18,15 @@ return new class extends Migration
             $table->foreignId('room_id')->constrained('rooms')->onDelete('cascade'); // Room associated with the request
             $table->foreignId('handyman_id')->nullable()->constrained('handy_men')->onDelete('set null'); // Assigned handyman
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null'); // Admin/Staff who assigned the handyman
+            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null'); // Admin/Staff who assigned the handyman
             $table->string('title'); // Short title of the request
             $table->text('description'); // Detailed description
             $table->json('images')->nullable(); // JSON column to store image URLs
-            $table->enum('status', ['pending','requested','assigned','in_progress', 'completed', 'cancelled'])->default('pending'); // Status tracking
+            $table->enum('status', ['pending','requested','assigned','in_progress','forApprove', 'completed', 'cancelled'])->default('pending'); // Status tracking
             $table->dateTime('requested_at')->useCurrent(); // When the request was created
+            $table->timestamp('assigned_at')->nullable();
             $table->timestamp('assisted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
             $table->dateTime('completed_at')->nullable(); // When the request was completed
             $table->timestamps();
         });

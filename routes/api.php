@@ -192,6 +192,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
         Route::get('get-requested-maintenance-requests', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequested']);
         Route::patch('patch-maintenance-request-to-assigned/{maintenance_request_id}/{handyman_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToAssigned']);
+        Route::patch('patch-maintenance-request-to-complete/{maintenance_request_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
 
         
 
@@ -213,7 +214,7 @@ Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {
         Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
         Route::get('get-requested-maintenance-request/{handyman_id}', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequestedByHandymanId']);
         Route::patch('patch-maintenance-request-to-in-progress/{maintenance_request_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToInProgress']);
-        Route::patch('patch-maintenance-request-to-in-complete/{maintenance_request_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
+        Route::patch('patch-maintenance-request-to-for-approve/{maintenance_request_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToForApprove']);
         // Route::patch('')
 
     });
