@@ -30,7 +30,6 @@ class BillingController extends Controller
         }
 
         $profileId = $rentalAgreement->reservation->profile_id;
-
        
         $billing = Billing::where('profile_id', $profileId)
             ->where('billable_id', $rentalAgreement->id)

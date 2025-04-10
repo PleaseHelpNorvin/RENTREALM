@@ -78,6 +78,10 @@ class RentalAgreementController extends Controller
         // Create Rental Agreement
         $rentalAgreement = RentalAgreement::create($validatedData);
 
+        //forUpdating steps when create success
+        $user = $rentalAgreement->reservation->userProfile->user;
+        $user->steps = '5';
+        $user->save();
 
         // Generate PDF in the background 
         $this->generatePdfContract($rentalAgreement);

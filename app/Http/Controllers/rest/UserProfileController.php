@@ -47,7 +47,8 @@ class UserProfileController extends Controller
                 ['user_id' => $user_id],
                 ['profile_picture_url' => $profile_picture_url]
             );
-    
+            //updating steps
+           $profile->user->update(['steps' => '2']);
             // Step 5: Return a dynamic success response
             $message = $profile->wasRecentlyCreated 
                 ? 'Profile picture created successfully.' 
@@ -67,58 +68,62 @@ class UserProfileController extends Controller
      * Store a newly created user profile in storage.
      */
     public function store(Request $request)
-{
-    $user = auth()->user();
-    Log::info('Authenticated user:', ['id' => $user->id]);  
-    
-    // Validate input data
-    $validated = $request->validate([
-        'phone_number' => 'nullable|string|max:255',
-        'social_media_links' => 'nullable|string|max:255',
-        'occupation' => 'nullable|string|max:255',
-        'line_1' => 'nullable|string|max:100',
-        'line_2' => 'nullable|string|max:100',
-        'province' => 'nullable|string|max:255',
-        'country' => 'nullable|string|max:255',
-        'postal_code' => 'nullable|string|max:20',
-        'driver_license_number' => 'nullable|string|max:255',
-        'national_id' => 'nullable|string|max:255',
-        'passport_number' => 'nullable|string|max:255',
-        'social_security_number' => 'nullable|string|max:255',
-    ]);
+    {
+        $user = auth()->user();
+        Log::info('Authenticated user:', ['id' => $user->id]);  
+        
+        // Validate input data
+        $validated = $request->validate([
+            'phone_number' => 'nullable|string|max:255',
+            'social_media_links' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
+            'line_1' => 'nullable|string|max:100',
+            'line_2' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'driver_license_number' => 'nullable|string|max:255',
+            'national_id' => 'nullable|string|max:255',
+            'passport_number' => 'nullable|string|max:255',
+            'social_security_number' => 'nullable|string|max:255',
+        ]);
 
-    // Ensure the profile belongs to the authenticated user
-    $profile = UserProfile::updateOrCreate(
-        ['user_id' => $user->id], // Use the authenticated user's ID
-        [
-            'phone_number' => $validated['phone_number'] ?? null,
-            'social_media_links' => $validated['social_media_links'] ?? null,
-            'occupation' => $validated['occupation'] ?? null,
-            'driver_license_number' => $validated['driver_license_number'] ?? null,
-            'national_id' => $validated['national_id'] ?? null,
-            'passport_number' => $validated['passport_number'] ?? null,
-            'social_security_number' => $validated['social_security_number'] ?? null,
-        ]
-    );
+        // Ensure the profile belongs to the authenticated user
+        $profile = UserProfile::updateOrCreate(
+            ['user_id' => $user->id], // Use the authenticated user's ID
+            [
+                'phone_number' => $validated['phone_number'] ?? null,
+                'social_media_links' => $validated['social_media_links'] ?? null,
+                'occupation' => $validated['occupation'] ?? null,
+                'driver_license_number' => $validated['driver_license_number'] ?? null,
+                'national_id' => $validated['national_id'] ?? null,
+                'passport_number' => $validated['passport_number'] ?? null,
+                'social_security_number' => $validated['social_security_number'] ?? null,
+            ]
+        );
 
-    $fullAddress = "{$validated['line_1']}, {$validated['line_2']}, {$validated['province']}, {$validated['country']}, {$validated['postal_code']}";
-    $coordinates = Address::getCoordinates($fullAddress);
+        $fullAddress = "{$validated['line_1']}, {$validated['line_2']}, {$validated['province']}, {$validated['country']}, {$validated['postal_code']}";
+        $coordinates = Address::getCoordinates($fullAddress);
+        
+        $user->update([
+            'steps' => '2'
+        ]);
 
-    $profile->address()->updateOrCreate(
-        ['id' => $profile->id], // Ensure address is linked to the correct profile
-        [
-            'line_1' => $validated['line_1'] ?? null,
-            'line_2' => $validated['line_2'] ?? null,
-            'province' => $validated['province'] ?? null,
-            'country' => $validated['country'] ?? null,
-            'postal_code' => $validated['postal_code'] ?? null,
-            'latitude' => $coordinates['latitude'] ?? null,
-            'longitude' => $coordinates['longitude'] ?? null,
-        ]
-    );
+        $profile->address()->updateOrCreate(
+            ['id' => $profile->id], // Ensure address is linked to the correct profile
+            [
+                'line_1' => $validated['line_1'] ?? null,
+                'line_2' => $validated['line_2'] ?? null,
+                'province' => $validated['province'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'latitude' => $coordinates['latitude'] ?? null,
+                'longitude' => $coordinates['longitude'] ?? null,
+            ]
+        );
 
-    return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
-}
+        return $this->successResponse(['profile' => $profile], 'User profile created successfully.', 201);
+    }
 
             
 

@@ -36,6 +36,10 @@ class TenantController extends Controller
 
         $tenant = Tenant::create($validated);
 
+        $user = $tenant->userProfile->user;
+        $user -> steps = '6';
+        $user->save();
+
         return $this->successResponse(['tenant' => $tenant], 'Tenant added successfully.');
     }
 
@@ -71,57 +75,57 @@ class TenantController extends Controller
             : null;
 
         // Hardcoded maintenance requests
-        $maintenanceRequests = [
-            [
-                'id' => 1,
-                'request_type' => 'Plumbing',
-                'description' => 'Leaking faucet in kitchen',
-                'status' => 'pending',
-                'requested_at' => '2025-03-20 14:30:00'
-            ],
-            [
-                'id' => 2,
-                'request_type' => 'Electrical1',
-                'description' => 'Power outlet not working in bedroom1',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-            [
-                'id' => 3,
-                'request_type' => 'Electrical2',
-                'description' => 'Power outlet not working in bedroom2',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-            [
-                'id' => 4,
-                'request_type' => 'Electrical3',
-                'description' => 'Power outlet not working in bedroom3',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-            [
-                'id' => 5,
-                'request_type' => 'Electrical4',
-                'description' => 'Power outlet not working in bedroom4',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-            [
-                'id' => 6,
-                'request_type' => 'Electrical5',
-                'description' => 'Power outlet not working in bedroom6',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-            [
-                'id' => 7,
-                'request_type' => 'Electrical6',
-                'description' => 'Power outlet not working in bedroom7',
-                'status' => 'in_progress',
-                'requested_at' => '2025-03-22 10:15:00'
-            ],
-        ];
+        // $maintenanceRequests = [
+        //     [
+        //         'id' => 1,
+        //         'request_type' => 'Plumbing',
+        //         'description' => 'Leaking faucet in kitchen',
+        //         'status' => 'pending',
+        //         'requested_at' => '2025-03-20 14:30:00'
+        //     ],
+        //     [
+        //         'id' => 2,
+        //         'request_type' => 'Electrical1',
+        //         'description' => 'Power outlet not working in bedroom1',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        //     [
+        //         'id' => 3,
+        //         'request_type' => 'Electrical2',
+        //         'description' => 'Power outlet not working in bedroom2',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        //     [
+        //         'id' => 4,
+        //         'request_type' => 'Electrical3',
+        //         'description' => 'Power outlet not working in bedroom3',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        //     [
+        //         'id' => 5,
+        //         'request_type' => 'Electrical4',
+        //         'description' => 'Power outlet not working in bedroom4',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        //     [
+        //         'id' => 6,
+        //         'request_type' => 'Electrical5',
+        //         'description' => 'Power outlet not working in bedroom6',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        //     [
+        //         'id' => 7,
+        //         'request_type' => 'Electrical6',
+        //         'description' => 'Power outlet not working in bedroom7',
+        //         'status' => 'in_progress',
+        //         'requested_at' => '2025-03-22 10:15:00'
+        //     ],
+        // ];
 
         return $this->successResponse([
             'tenant' => $tenant,
@@ -133,7 +137,7 @@ class TenantController extends Controller
                 'remaining_balance' => $billing->remaining_balance
             ] : null,
             'next_billing_month' => $nextBillingMonth,
-            'maintenance_requests' => $maintenanceRequests, // Add hardcoded data here
+            // 'maintenance_requests' => $maintenanceRequests, // Add hardcoded data here
         ], 'Tenant fetched successfully.');
     }
     

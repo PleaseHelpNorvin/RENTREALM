@@ -68,6 +68,10 @@ class ReservationController extends Controller
         $room = Room::find($validatedData['room_id']);
         $room->status = 'reserved'; // or whatever status
         $room->save();
+        
+        $user = $reservation->userProfile->user;
+        $user->steps = '3';  // Set the steps field to '3'
+        $user->save();
     
 
         $reservation->notifications()->create([
@@ -105,8 +109,19 @@ class ReservationController extends Controller
         if ($validatedData['status'] == 'pending') {
             $room->status = 'vacant'; // or 'occupied'
         } 
-
         $room->save();
+
+        $user = $reservation->userProfile->user;
+    
+        // If the reservation status is 'pending', update user steps to '3'
+        if ($validatedData['status'] == 'pending') {
+            $user->steps = '3';
+        }
+        // If the reservation status is 'approved', update user steps to '4'
+        else if ($validatedData['status'] == 'approved') {
+            $user->steps = '4';
+        }
+        $user->save();
 
 
         $adminId = $reservation->approved_by;

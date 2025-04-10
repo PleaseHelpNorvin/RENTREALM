@@ -62,7 +62,7 @@ class MaintenanceRequestController extends Controller
         
         // Validate the request
         $validated = $request->validate([
-            'tenant_id'   => 'required|exists:users,id',
+            'tenant_id'   => 'required|exists:tenants,id',
             'room_id'     => 'required|exists:rooms,id',
             'handyman_id' => 'nullable|exists:handy_men,id',
             'title'       => 'required|string|max:255',

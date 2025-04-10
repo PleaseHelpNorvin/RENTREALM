@@ -303,10 +303,17 @@ class PaymentController extends Controller
         if ($billing->status === 'partial') {
             $notificationData['title'] = 'Payment Reminder';
             $notificationData['message'] = 'Your payment is incomplete. Please complete your payment to avoid issues.';
+            $user = $tenant->userProfile->user;
+            $user->steps = '6';
+            $user->save();
+
         } elseif ($billing->status === 'paid') {
             $notificationData['title'] = 'Payment Successful';
             $notificationData['message'] = 'Your payment has been fully received. Thank you!';
             $this->generatePdfReceipt($payment);
+            $user = $tenant->userProfile->user;
+            $user->steps = '6';
+            $user->save();
         }
     
         $payment->notifications()->create($notificationData);
