@@ -53,6 +53,58 @@ class TenantController extends Controller
 
         return $this->successResponse(['tenant' => $tenant], 'Tenant fetched successfully.');
     }
+    //getTenantViaRoomId is used in landlord
+    public function getTenantViaRoomId($room_id)
+    {
+        $tenants = Tenant::whereHas('rentalAgreement.reservation.room', function($query) use ($room_id) {
+            $query->where('id', $room_id);
+        })
+        ->with('rentalAgreement.reservation.room', 'userProfile.user', 'userProfile.address')
+        ->get();
+
+        if ($tenants->isEmpty()) {
+            return $this->notFoundResponse([], 'Tenant not found');
+        }
+
+        // Manually modify the signature_png_string to full URL
+        $tenants->map(function($tenant) {
+            if ($tenant->rentalAgreement && $tenant->rentalAgreement->signature_png_string) {
+                $tenant->rentalAgreement->signature_png_string = asset('storage/' . $tenant->rentalAgreement->signature_png_string);
+            }
+
+            if ($tenant->rentalAgreement && $tenant->rentalAgreement->reservation && $tenant->rentalAgreement->reservation->reservation_payment_proof_url) {
+                $proofUrls = json_decode($tenant->rentalAgreement->reservation->reservation_payment_proof_url, true); // decode JSON string
+                if (is_array($proofUrls)) {
+                    // Convert each URL to a full URL
+                    $proofUrls = array_map(function($url) {
+                        return asset('storage/' . $url);
+                    }, $proofUrls);
+                    // Update the field with full URLs
+                    $tenant->rentalAgreement->reservation->reservation_payment_proof_url = $proofUrls;
+                }
+            }
+
+            if ($tenant->rentalAgreement && $tenant->rentalAgreement->reservation && $tenant->rentalAgreement->reservation->room && $tenant->rentalAgreement->reservation->room->room_picture_url) {
+                $roomPictureUrls = json_decode($tenant->rentalAgreement->reservation->room->room_picture_url, true); // decode JSON string
+                if (is_array($roomPictureUrls)) {
+                    // Convert each room picture URL to a full URL
+                    $roomPictureUrls = array_map(function($url) {
+                        return asset($url);
+                    }, $roomPictureUrls);
+                    // Update the field with full URLs
+                    $tenant->rentalAgreement->reservation->room->room_picture_url = $roomPictureUrls;
+                }
+            }
+
+            if ($tenant->userProfile && $tenant->userProfile->profile_picture_url) {
+                $tenant->userProfile->profile_picture_url = asset( $tenant->userProfile->profile_picture_url);
+            }
+            return $tenant;
+        });
+
+        
+        return $this->successResponse(['tenant' => $tenants], 'Tenant retrieved successfully');
+    }
 
     public function showByProfileId($profile_id)
     {
@@ -74,59 +126,6 @@ class TenantController extends Controller
             ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
             : null;
 
-        // Hardcoded maintenance requests
-        // $maintenanceRequests = [
-        //     [
-        //         'id' => 1,
-        //         'request_type' => 'Plumbing',
-        //         'description' => 'Leaking faucet in kitchen',
-        //         'status' => 'pending',
-        //         'requested_at' => '2025-03-20 14:30:00'
-        //     ],
-        //     [
-        //         'id' => 2,
-        //         'request_type' => 'Electrical1',
-        //         'description' => 'Power outlet not working in bedroom1',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        //     [
-        //         'id' => 3,
-        //         'request_type' => 'Electrical2',
-        //         'description' => 'Power outlet not working in bedroom2',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        //     [
-        //         'id' => 4,
-        //         'request_type' => 'Electrical3',
-        //         'description' => 'Power outlet not working in bedroom3',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        //     [
-        //         'id' => 5,
-        //         'request_type' => 'Electrical4',
-        //         'description' => 'Power outlet not working in bedroom4',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        //     [
-        //         'id' => 6,
-        //         'request_type' => 'Electrical5',
-        //         'description' => 'Power outlet not working in bedroom6',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        //     [
-        //         'id' => 7,
-        //         'request_type' => 'Electrical6',
-        //         'description' => 'Power outlet not working in bedroom7',
-        //         'status' => 'in_progress',
-        //         'requested_at' => '2025-03-22 10:15:00'
-        //     ],
-        // ];
-
         return $this->successResponse([
             'tenant' => $tenant,
             'latest_billing' => $billing ? [
@@ -137,7 +136,6 @@ class TenantController extends Controller
                 'remaining_balance' => $billing->remaining_balance
             ] : null,
             'next_billing_month' => $nextBillingMonth,
-            // 'maintenance_requests' => $maintenanceRequests, // Add hardcoded data here
         ], 'Tenant fetched successfully.');
     }
     

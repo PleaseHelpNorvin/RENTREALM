@@ -126,7 +126,7 @@ class RoomController extends Controller
             'current_occupants' => 'nullable|integer',
             'min_lease' => 'required|integer',
             'size' => 'required|string|max:20',
-            'status' => 'required|in:available,rented,under_maintenance,full',
+            'status' => 'required|in:vacant,occupied,reserved',
             'unit_type' => 'required|in:studio_unit,triplex_unit,alcove,loft_unit,shared_unit,micro_unit',
         ]);
     
