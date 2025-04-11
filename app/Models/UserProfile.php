@@ -49,5 +49,14 @@ class UserProfile extends Model
         return $this->hasMany(Reservation::class, 'profile_id');
     }
 
+     public function userProfile()
+    {
+        return $this->belongsTo(UserProfile::class, 'profile_id');
+    }
     
+    public function billings()
+    {
+        return $this->hasMany(BIlling::class, 'profile_id');
+    }
+   
 }

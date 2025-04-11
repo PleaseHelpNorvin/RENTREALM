@@ -199,6 +199,13 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
         // Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
     }); 
+
+    Route::prefix('user')->group(function () {
+        // Route::get('index', [UserController::class, 'index']);
+        Route::get('users-lists-with-relations', [UserController::class, 'getUsersAndItsRelations']);
+        Route::get('admin-show-tenant-by-profile-id/{profile_id}', [TenantController::class, 'adminShowTenantByProfileId']);
+
+    });
 });
 
 Route::prefix('handyman')->middleware('auth:sanctum')->group(function () {

@@ -69,4 +69,13 @@ class UserController extends Controller
         return $this->successResponse(['user' => $user], 'User updated successfully');
     }
 
+    public function getUsersAndItsRelations()
+    {
+        $users = User::with([
+            'userProfile.address',     // if you have this
+        ])->where('role', 'tenant')->get();
+    
+        return $this->successResponse(['user' => $users], 'Successfully fetched users with relations');
+    }
+    
 }

@@ -85,6 +85,11 @@ class User extends Authenticatable
         return $this->hasOne(Handyman::class);
     }
 
+    public function userProfile()
+    {
+        return $this->hasMany(userProfile::class, 'user_id');
+    }
+
     public function pickedRooms()
     {
         return $this->hasMany(PickedRoom::class);
@@ -108,4 +113,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(MaintenanceRequest::class, 'approved_by');
     }
+
+    
 }

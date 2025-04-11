@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Tenant;
 use App\Models\Billing;
 use App\Models\Reservation;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\RentalAgreement;
 use App\Http\Controllers\Controller;
@@ -85,7 +86,7 @@ class TenantController extends Controller
             }
 
             if ($tenant->rentalAgreement && $tenant->rentalAgreement->reservation && $tenant->rentalAgreement->reservation->room && $tenant->rentalAgreement->reservation->room->room_picture_url) {
-                $roomPictureUrls = json_decode($tenant->rentalAgreement->reservation->room->room_picture_url, true); // decode JSON string
+                $roomPictureUrls = json_decode($tenant->rentalAgreement->reservation->room->room_picture_url, true);
                 if (is_array($roomPictureUrls)) {
                     // Convert each room picture URL to a full URL
                     $roomPictureUrls = array_map(function($url) {
@@ -105,6 +106,7 @@ class TenantController extends Controller
         
         return $this->successResponse(['tenant' => $tenants], 'Tenant retrieved successfully');
     }
+
 
     public function showByProfileId($profile_id)
     {
@@ -213,5 +215,47 @@ class TenantController extends Controller
         ]);
 
         return $this->successResponse(['tenant' => $tenant], 'Tenant move-out completed.');
+    }
+
+
+    public function adminShowTenantByProfileId($profile_id)
+    {
+        $tenant = Tenant::with(['rentalAgreement', 'userProfile.user','userProfile.address'])
+            ->where('profile_id', $profile_id)
+            ->first();
+
+        if (!$tenant) {
+            return $this->notFoundResponse(null, "Tenant with profile ID $profile_id not found.");
+        }
+
+        // Fetch latest billing for the tenant
+        $billing = Billing::where('profile_id', $profile_id)
+            ->orderBy('billing_month', 'desc')
+            ->first();
+
+        // Calculate the next billing month (if a billing record exists)
+        $nextBillingMonth = $billing
+            ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
+            : null;
+
+        $paymentHistory = Billing::where('profile_id', $profile_id)
+            ->orderBy('billing_month', 'desc')
+            ->get();
+
+            $notification = Notification::where('user_id', $tenant->userProfile->user->id)->get();
+
+        return $this->successResponse([
+            'tenant' => $tenant,
+            'latest_billing' => $billing ? [
+                'billing_month' => $billing->billing_month,
+                'status' => $billing->status,
+                'total_amount' => $billing->total_amount,
+                'amount_paid' => $billing->amount_paid,
+                'remaining_balance' => $billing->remaining_balance
+            ] : null,
+            'next_billing_month' => $nextBillingMonth,
+            'payment_history' => $paymentHistory,
+            'notifications' => $notification,
+        ], 'Tenant fetched successfully.');
     }
 }
