@@ -23,6 +23,7 @@ use App\Http\Controllers\rest\MaintenanceRequestController;
 Route::post('/register-webhook', [PaymentController::class, 'registerWebhook']);
 
 Route::post('/webhook-handler', [PaymentController::class, 'handleWebhook']);
+Route::get('/payment-success', [PaymentController::class, 'paymentSuccess']);
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('create/tenant', [AuthController::class, 'create']);

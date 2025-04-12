@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\rest;
+use App\Http\Controllers\Controller;
+
 
 use App\Models\Tenant;
 use GuzzleHttp\Client;
@@ -12,7 +14,7 @@ use App\Models\RentalAgreement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Jobs\CheckFailedPayment;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
+// use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
@@ -132,15 +134,29 @@ class PaymentController extends Controller
 
     public function retrievePayment($billingId)
     {
-        Log::info("Retrieving payment for billing ID: {$billingId}");
-    
+        Log::info("Retrieving payment for billing ID: {$billingId}", [
+            'called_from' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+        ]);    
         // Find the billing record with the stored checkout_session_id
-        $billing = Billing::where('id', $billingId)->first();
-    
+        $billing = Billing::with('userProfile.user')
+        ->where('id', $billingId)
+        ->first();
+        
+        
         if (!$billing || !$billing->checkout_session_id) {
             Log::error("Billing record not found or checkout_session_id missing for billing ID: {$billingId}");
             return response()->json(['error' => 'Billing record or checkout session ID not found'], 404);
         }
+        
+        Log::debug('Debug billing data', [
+            'billing_id' => $billingId,
+            'billing' => $billing
+        ]);
+
+        // if (!$billing->userProfile) {
+        //     Log::error("UserProfile not found for Billing ID: {$billingId}");
+        //     return response()->json(['error' => 'UserProfile not found'], 404);
+        // }
     
         $checkoutSessionId = $billing->checkout_session_id;
         Log::info("Found checkout_session_id: {$checkoutSessionId} for billing ID: {$billingId}");
@@ -210,117 +226,113 @@ class PaymentController extends Controller
             
         // return $this->storePaymentAfterPayMongo($billingId, $amount, 'GCash', $paymentReference, null);
 
-    private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
-    {
-        $centToPesoAmountPaid = $amountPaid / 100; // ✅ Fix: Use correct variable
-    
-        try {
-            Log::info('storePaymentAfterPayMongo called with:', [
-                'billingId' => $billingId,
-                'amountPaid' => $centToPesoAmountPaid,
-                'paymentMethod' => $paymentMethod,
-                'paymentReference' => $paymongoPaymentRef,
-                'paymentProofFiles' => $paymentProofFiles
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Logging failed: ' . $e->getMessage());
-        }
-    
-        // 🔎 Find the billing record
-        $billing = Billing::find($billingId);
-        if (!$billing) {
-            return response()->json(['message' => 'Billing not found'], 404);
-        }
+        private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
+        {
+            $centToPesoAmountPaid = $amountPaid / 100;
         
-        
-    
-        // ✅ Fix: Prevent error if no files are uploaded
-        $paymentProofsUrls = [];
-        if (!empty($paymentProofFiles) && is_array($paymentProofFiles)) {
-            foreach ($paymentProofFiles as $file) {
-                $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
+            try {
+                Log::info('storePaymentAfterPayMongo called with:', [
+                    'billingId' => $billingId,
+                    'amountPaid' => $centToPesoAmountPaid,
+                    'paymentMethod' => $paymentMethod,
+                    'paymentReference' => $paymongoPaymentRef,
+                    'paymentProofFiles' => $paymentProofFiles
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Logging failed: ' . $e->getMessage());
             }
-        }
-
         
-    
-        // 💰 Create Payment Record
-        $payment = Payment::create([
-            'billing_id' => $billing->id,
-            'payable_id' => $billing->billable_id,
-            'payable_type' => $billing->billable_type,
-            'profile_id' => $billing->profile_id,
-            'amount_paid' => $centToPesoAmountPaid,
-            'payment_method' => $paymentMethod,
-            'paymongo_payment_reference' => $paymongoPaymentRef,
-            'payment_proof_url' => json_encode($paymentProofsUrls),
-            'status' => 'paid',
-        ]);
-    
-        // 🏦 Update Billing Record
-        $billing->amount_paid += $centToPesoAmountPaid; // ✅ Fix: Use correct property
-        $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
-    
-        if ($billing->remaining_balance <= 0) {
-            $billing->status = 'paid';
-            if ($billing->billable_type === RentalAgreement::class) {
-                $rentalAgreement = RentalAgreement::find($billing->billable_id);
+            $billing = Billing::with('userProfile.user')->find($billingId);
         
-                if ($rentalAgreement && $rentalAgreement->reservation && $rentalAgreement->reservation->room) {
-                    $room = $rentalAgreement->reservation->room;
-                    $room->status = 'occupied'; // Mark room as occupied
-                    $room->save();
+            if (!$billing) {
+                Log::warning('Billing not found for ID: ' . $billingId);
+                return response()->json(['message' => 'Billing not found'], 404);
+            }
+        
+            Log::info('Billing found: ' . $billing->id);
+        
+            // Handle payment proof files
+            $paymentProofsUrls = [];
+            if (!empty($paymentProofFiles) && is_array($paymentProofFiles)) {
+                foreach ($paymentProofFiles as $file) {
+                    $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
                 }
             }
-        } else if ($billing->remaining_balance > 0) { // ✅ Fix: Check balance, not amount_paid
-            $billing->status = 'partial';
-        }
-    
-        $billing->save();
-    
-        // 🏠 Create or Update Tenant
-        $status = ($billing->status === 'paid') ? 'active' : 'pending';
-
-        // ✅ Fix: Check if Tenant already exists before creating a new one
-        $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
-        if ($tenant) {
-            $tenant->status = $status;
-            $tenant->save();
-        } else {
-            Tenant::create([
-                'profile_id' => $billing->profile_id,
-                'rental_agreement_id' => $billing->billable_id,
-                'status' => $status,
-            ]);
-        }
-    
-        // 📢 Notify Tenant
-        $notificationData = [
-            'user_id' => $billing->userProfile->user_id,
-            'is_read' => 0,
-        ];
-    
-        if ($billing->status === 'partial') {
-            $notificationData['title'] = 'Payment Reminder';
-            $notificationData['message'] = 'Your payment is incomplete. Please complete your payment to avoid issues.';
-            $user = $tenant->userProfile->user;
-            $user->steps = '6';
-            $user->save();
-
-        } elseif ($billing->status === 'paid') {
-            $notificationData['title'] = 'Payment Successful';
-            $notificationData['message'] = 'Your payment has been fully received. Thank you!';
-            $this->generatePdfReceipt($payment);
-            $user = $tenant->userProfile->user;
-            $user->steps = '6';
-            $user->save();
-        }
-    
-        $payment->notifications()->create($notificationData);
-    
-        return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
-    }
         
+            // Create Payment
+            $payment = Payment::create([
+                'billing_id' => $billing->id,
+                'payable_id' => $billing->billable_id,
+                'payable_type' => $billing->billable_type,
+                'profile_id' => $billing->profile_id,
+                'amount_paid' => $centToPesoAmountPaid,
+                'payment_method' => $paymentMethod,
+                'paymongo_payment_reference' => $paymongoPaymentRef,
+                'payment_proof_url' => json_encode($paymentProofsUrls),
+                'status' => 'paid',
+            ]);
+        
+            // Update Billing
+            $billing->amount_paid += $centToPesoAmountPaid;
+            $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
+        
+            if ($billing->remaining_balance <= 0) {
+                $billing->status = 'paid';
+        
+                if ($billing->billable_type === RentalAgreement::class) {
+                    $rentalAgreement = RentalAgreement::find($billing->billable_id);
+                    if ($rentalAgreement && $rentalAgreement->reservation && $rentalAgreement->reservation->room) {
+                        $rentalAgreement->reservation->room->update(['status' => 'occupied']);
+                    }
+                }
+            } else {
+                $billing->status = 'partial';
+            }
+        
+            $billing->save();
+        
+            // Create or Update Tenant
+            $status = ($billing->status === 'paid') ? 'active' : 'pending';
+            $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
+        
+            if ($tenant) {
+                $tenant->status = $status;
+                $tenant->save();
+            } else {
+                $tenant = Tenant::create([
+                    'profile_id' => $billing->profile_id,
+                    'rental_agreement_id' => $billing->billable_id,
+                    'status' => $status,
+                ]);
+            }
+        
+            // Notify
+            $notificationData = [
+                'user_id' => $billing->userProfile->user_id,
+                'is_read' => 0,
+            ];
+        
+            $user = optional($tenant->userProfile)->user;
+        
+            if ($billing->status === 'partial') {
+                $notificationData['title'] = 'Payment Reminder';
+                $notificationData['message'] = 'Your payment is incomplete. Please complete your payment to avoid issues.';
+            } else {
+                $notificationData['title'] = 'Payment Successful';
+                $notificationData['message'] = 'Your payment has been fully received. Thank you!';
+                $this->generatePdfReceipt($payment);
+            }
+        
+            if ($user) {
+                $user->steps = '6';
+                $user->save();
+            }
+        
+            $payment->notifications()->create($notificationData);
+        
+            return response()->json(['payment' => $payment, 'message' => 'Payment stored successfully']);
+        }
+                
 
     public function generatePdfReceipt(Payment $payment)
     {

@@ -27,8 +27,7 @@ class Billing extends Model
     ];
 
 
-    public function userProfile()
-    {
+    public function userProfile() {
         return $this->belongsTo(UserProfile::class, 'profile_id');
     }
 
