@@ -45,7 +45,10 @@ class Billing extends Model
     {
         return $this->morphMany(Notification::class, 'notifiable'); 
     }
-
+    public function rentalAgreement()
+    {
+        return $this->belongsTo(RentalAgreement::class, 'billable_id');
+    }
 }
 
 

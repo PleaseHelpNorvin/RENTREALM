@@ -64,4 +64,8 @@ class MaintenanceRequest extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
 }

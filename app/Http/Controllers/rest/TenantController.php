@@ -220,7 +220,7 @@ class TenantController extends Controller
 
     public function adminShowTenantByProfileId($profile_id)
     {
-        $tenant = Tenant::with(['rentalAgreement', 'userProfile.user','userProfile.address'])
+        $tenant = Tenant::with([ 'userProfile.user','userProfile.address'])
             ->where('profile_id', $profile_id)
             ->first();
 
@@ -228,33 +228,68 @@ class TenantController extends Controller
             return $this->notFoundResponse(null, "Tenant with profile ID $profile_id not found.");
         }
 
+        if ($tenant->user_profile && $tenant->user_profile->profile_picture_url) {
+            // Generate the full URL for the profile picture
+            $tenant->user_profile->profile_picture_url = url('storage/profile_pictures/' . $tenant->user_profile->profile_picture_url);
+        }
+    
+    
         // Fetch latest billing for the tenant
         $billing = Billing::where('profile_id', $profile_id)
-            ->orderBy('billing_month', 'desc')
-            ->first();
+        ->orderBy('billing_month', 'desc')
+        ->first();
 
-        // Calculate the next billing month (if a billing record exists)
+        $rentalAgreements = RentalAgreement::with(['reservation.room.property'])
+        ->whereHas('reservation', function ($query) use ($profile_id) {
+            $query->where('profile_id', $profile_id);
+        })
+        ->get()
+        ->map(function ($rental) use ($billing) {
+            // Fetch the latest billing for each rental agreement
+            $latestBilling = Billing::where('billable_type', RentalAgreement::class)
+                ->where('billable_id', $rental->id)
+                ->orderBy('billing_month', 'desc')
+                ->first();
+
+            // Calculate the next billing month based on the latest billing
+            $nextBillingMonth = $latestBilling
+                ? Carbon::parse($latestBilling->billing_month)->addMonth()->format('Y-m-d')
+                : null;
+
+            // Add the latest billing and next billing information to the rental agreement
+            $rental->latest_billing = $latestBilling ? [
+                'billing_month' => $latestBilling->billing_month,
+                'status' => $latestBilling->status,
+                'total_amount' => $latestBilling->total_amount,
+                'amount_paid' => $latestBilling->amount_paid,
+                'remaining_balance' => $latestBilling->remaining_balance
+            ] : null;
+
+            $rental->next_billing_month = $nextBillingMonth;
+
+            return $rental;
+        });
+        
+                // Calculate the next billing month (if a billing record exists)
         $nextBillingMonth = $billing
             ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
             : null;
 
-        $paymentHistory = Billing::where('profile_id', $profile_id)
-            ->orderBy('billing_month', 'desc')
-            ->get();
+        // $paymentHistory = Billing::with('payments')->where('profile_id', $profile_id)
+        //     ->orderBy('billing_month', 'desc')
+        //     ->get();
+        $paymentHistory = Billing::with(['payments', 'rentalAgreement'])
+        ->where('profile_id', $profile_id)
+        ->where('billable_type', \App\Models\RentalAgreement::class)
+        ->orderBy('billing_month', 'desc')
+        ->get();
 
-            $notification = Notification::where('user_id', $tenant->userProfile->user->id)->get();
+        $notification = Notification::where('user_id', $tenant->userProfile->user->id)->get();
 
         return $this->successResponse([
             'tenant' => $tenant,
-            'latest_billing' => $billing ? [
-                'billing_month' => $billing->billing_month,
-                'status' => $billing->status,
-                'total_amount' => $billing->total_amount,
-                'amount_paid' => $billing->amount_paid,
-                'remaining_balance' => $billing->remaining_balance
-            ] : null,
-            'next_billing_month' => $nextBillingMonth,
             'payment_history' => $paymentHistory,
+            'rental_agreements' => $rentalAgreements, // Include rental agreements
             'notifications' => $notification,
         ], 'Tenant fetched successfully.');
     }

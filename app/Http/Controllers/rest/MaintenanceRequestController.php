@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\MaintenanceRequest;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Str;
+
 
 class MaintenanceRequestController extends Controller
 {
@@ -124,6 +126,24 @@ class MaintenanceRequestController extends Controller
             'requested_at'=> now(),
         ]);
 
+        $user = $request->user();
+        $maintenanceRequestNotif = $maintenanceRequest->notifications()->create([
+            'user_id' => $user->id,
+            'title' => 'Maintenance Request Submitted - ' . $ticketCode,
+            'message' => "Your maintenance request titled '{$maintenanceRequest->title}' has been submitted successfully.\n\n"
+                . "🛠 Ticket Code: {$ticketCode}\n"
+                . "📅 Requested At: " . now()->format('F j, Y h:i A') . "\n"
+                . "🏠 Room ID: {$maintenanceRequest->room_id}\n"
+                . "📝 Description: " . Str::limit($maintenanceRequest->description, 200) . "\n\n"
+                . "We will review your request and assign a handyman shortly.",
+        ]);
+        
+        Log::info('Maintenance request created notification', [
+            'user_id' => $maintenanceRequestNotif->user_id,
+            'title' => $maintenanceRequestNotif->title,
+            'message' => $maintenanceRequestNotif->message,
+            'is_read' => $maintenanceRequestNotif->is_read,
+        ]);
         // Return successful response
         Log::info('Maintenance request created:', [
             'maintenance_request_id' => $maintenanceRequest->id,
