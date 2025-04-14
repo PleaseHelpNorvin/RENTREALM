@@ -99,54 +99,28 @@ class TenantController extends Controller
     //getTenantViaRoomId is used in landlord
     public function getTenantViaRoomId($room_id)
     {
-        $tenants = Tenant::with(['userProfile.user', 'rentalAgreement.reservation.room'])
-        ->whereHas('rentalAgreement.reservation', function ($query) use ($room_id) {
-            $query->where('room_id', $room_id);
-        })->get();
-
-
-        if ($tenants->isEmpty()) {
-            return $this->notFoundResponse([], 'Tenant not found');
+        // Retrieve the tenant data with only the rental agreements related to the specific room
+        $tenant = Tenant::with([
+                'userProfile.user',
+                'rentalAgreements' => function($query) use ($room_id) {
+                    $query->whereHas('reservation', function($query) use ($room_id) {
+                        $query->where('room_id', $room_id); 
+                    });
+                },
+                'rentalAgreements.reservation.room', 
+                'rentalAgreements.reservation.userProfile',
+                'rentalAgreements.reservation.approvedBy'
+            ])
+            ->whereHas('rentalAgreements.reservation', function($query) use ($room_id) {
+                $query->where('room_id', $room_id); 
+            })
+            ->first();
+    
+        if (!$tenant) {
+            return $this->errorResponse('Tenant not found for the given room.', 404);
         }
-
-        // Manually modify the signature_png_string to full URL
-        $tenants->map(function($tenant) {
-            if ($tenant->rentalAgreement && $tenant->rentalAgreement->signature_png_string) {
-                $tenant->rentalAgreement->signature_png_string = asset('storage/' . $tenant->rentalAgreement->signature_png_string);
-            }
-
-            if ($tenant->rentalAgreement && $tenant->rentalAgreement->reservation && $tenant->rentalAgreement->reservation->reservation_payment_proof_url) {
-                $proofUrls = json_decode($tenant->rentalAgreement->reservation->reservation_payment_proof_url, true); // decode JSON string
-                if (is_array($proofUrls)) {
-                    // Convert each URL to a full URL
-                    $proofUrls = array_map(function($url) {
-                        return asset('storage/' . $url);
-                    }, $proofUrls);
-                    // Update the field with full URLs
-                    $tenant->rentalAgreement->reservation->reservation_payment_proof_url = $proofUrls;
-                }
-            }
-
-            if ($tenant->rentalAgreement && $tenant->rentalAgreement->reservation && $tenant->rentalAgreement->reservation->room && $tenant->rentalAgreement->reservation->room->room_picture_url) {
-                $roomPictureUrls = json_decode($tenant->rentalAgreement->reservation->room->room_picture_url, true);
-                if (is_array($roomPictureUrls)) {
-                    // Convert each room picture URL to a full URL
-                    $roomPictureUrls = array_map(function($url) {
-                        return asset($url);
-                    }, $roomPictureUrls);
-                    // Update the field with full URLs
-                    $tenant->rentalAgreement->reservation->room->room_picture_url = $roomPictureUrls;
-                }
-            }
-
-            if ($tenant->userProfile && $tenant->userProfile->profile_picture_url) {
-                $tenant->userProfile->profile_picture_url = asset( $tenant->userProfile->profile_picture_url);
-            }
-            return $tenant;
-        });
-
-        
-        return $this->successResponse(['tenant' => $tenants], 'Tenant retrieved successfully');
+    
+        return $this->successResponse(['tenant' => $tenant], 'Tenant retrieved successfully');
     }
 
 
