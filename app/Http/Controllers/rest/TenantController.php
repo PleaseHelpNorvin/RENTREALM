@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Tenant;
 use App\Models\Billing;
 use App\Models\Reservation;
+use Illuminate\Support\Str;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\RentalAgreement;
@@ -99,7 +100,6 @@ class TenantController extends Controller
     //getTenantViaRoomId is used in landlord
     public function getTenantViaRoomId($room_id)
     {
-        // Retrieve the tenant data with only the rental agreements related to the specific room
         $tenant = Tenant::with([
                 'userProfile.user',
                 'rentalAgreements' => function($query) use ($room_id) {
@@ -108,20 +108,52 @@ class TenantController extends Controller
                     });
                 },
                 'rentalAgreements.reservation.room', 
-                'rentalAgreements.reservation.userProfile',
+                // 'rentalAgreements.reservation.userProfile',
                 'rentalAgreements.reservation.approvedBy'
             ])
             ->whereHas('rentalAgreements.reservation', function($query) use ($room_id) {
                 $query->where('room_id', $room_id); 
             })
             ->first();
-    
+
         if (!$tenant) {
             return $this->errorResponse('Tenant not found for the given room.', 404);
         }
-    
+
+        // Convert profile picture URL using asset()
+        if ($tenant->userProfile && $tenant->userProfile->profile_picture_url) {
+            $tenant->userProfile->profile_picture_url = asset(ltrim($tenant->userProfile->profile_picture_url, '/'));
+        }
+
+        // Go through each rental agreement and update room picture and payment proof URLs
+        if ($tenant->rentalAgreements && $tenant->rentalAgreements->isNotEmpty()) {
+            foreach ($tenant->rentalAgreements as $agreement) {
+                $room = $agreement->reservation->room ?? null;
+
+                // Room Pictures
+                if ($room && !empty($room->room_picture_url)) {
+                    $roomPictures = json_decode($room->room_picture_url, true);
+                    $room->room_picture_url = array_map(function ($url) {
+                        if (Str::startsWith($url, ['http://', 'https://'])) {
+                            return $url;
+                        }
+                    
+                        // Otherwise, wrap it with asset()
+                        return asset('storage/' . ltrim($url, '/'));
+                    }, $roomPictures);
+                }
+
+                // Reservation Payment Proof
+                $proofUrls = json_decode($agreement->reservation->reservation_payment_proof_url ?? '[]', true);
+                $agreement->reservation->reservation_payment_proof_url = array_map(function ($url) {
+                    return asset('storage/' . ltrim($url, '/'));
+                }, $proofUrls);
+            }
+        }
+
         return $this->successResponse(['tenant' => $tenant], 'Tenant retrieved successfully');
     }
+
 
 
     public function showByProfileId($profile_id)
