@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('checkout_session_id')->nullable();
             $table->timestamps();
         });
-
     }
 
     /**

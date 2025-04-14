@@ -294,19 +294,44 @@ class PaymentController extends Controller
             // Create or Update Tenant
             $status = ($billing->status === 'paid') ? 'active' : 'pending';
             $tenant = Tenant::where('profile_id', $billing->profile_id)->first();
-        
+
             if ($tenant) {
                 $tenant->status = $status;
                 $tenant->save();
+                Log::info("tenant already exists...");
+                Log::info("populating the pivot Table");
+
+                if ($billing->billable_type === RentalAgreement::class) {
+                    $rentalAgreement = RentalAgreement::find($billing->billable_id);
+            
+                    if ($rentalAgreement && !$rentalAgreement->pivotTenants->contains($tenant->id)) {
+                        // Attach the tenant to the rental agreement
+                        $rentalAgreement->pivotTenants()->attach($tenant->id);
+                    }
+                }
+
             } else {
+                Log::info("creating tenant....");
+            
                 $tenant = Tenant::create([
                     'profile_id' => $billing->profile_id,
                     'rental_agreement_id' => $billing->billable_id,
                     'status' => $status,
                 ]);
+            
+                Log::info("populating the pivot Table");
+
+                    // Ensure tenant is attached to the rental agreement
+                if ($billing->billable_type === RentalAgreement::class) {
+                    $rentalAgreement = RentalAgreement::find($billing->billable_id);
+
+                    // Attach the tenant to the rental agreement if not already attached
+                    if ($rentalAgreement && !$rentalAgreement->pivotTenants->contains($tenant->id)) {
+                        $rentalAgreement->pivotTenants()->attach($tenant->id);
+                    }
+                }
             }
-        
-            // Notify
+                        // Notify
             $notificationData = [
                 'user_id' => $billing->userProfile->user_id,
                 'is_read' => 0,

@@ -31,9 +31,20 @@ class Tenant extends Model
     //     return $this->belongsTo(Room::class);
     // }
 
+/**
+     * 🔗 Primary agreement (One-to-Many)
+     */
     public function rentalAgreement()
     {
         return $this->belongsTo(RentalAgreement::class, 'rental_agreement_id');
+    }
+
+    /**
+     * 🔗 All agreements (Many-to-Many via pivot)
+     */
+    public function rentalAgreements()
+    {
+        return $this->belongsToMany(RentalAgreement::class, 'rental_agreement_tenant');
     }
 
     public function tenant()
@@ -55,6 +66,4 @@ class Tenant extends Model
     {
         return $this->morphMany(Notification::class, 'notifiable'); 
     }
-
-  
 }

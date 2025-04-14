@@ -65,6 +65,14 @@ class RentalAgreement extends Model
     {
         return $this->hasMany(Tenant::class, 'rental_agreement_id');
     }
+
+
+    public function pivotTenants()
+    {
+        return $this->belongsToMany(Tenant::class, 'rental_agreement_tenant');
+    }
+
+
 }
 
 

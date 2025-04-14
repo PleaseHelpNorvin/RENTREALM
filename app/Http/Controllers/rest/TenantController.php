@@ -16,7 +16,7 @@ class TenantController extends Controller
 {
     public function index()
     {
-        $tenants = Tenant::with('rentalAgreement')->get();
+        $tenants = Tenant::with('rentalAgreements')->get();
 
         if ($tenants->isEmpty()) {
             return $this->notFoundResponse(null, 'No tenants found.');
@@ -25,6 +25,25 @@ class TenantController extends Controller
         return $this->successResponse(['tenants' => $tenants], 'Tenants fetched successfully.');
     }
 
+    // public function store(Request $request) not used
+    // {
+    //     $validated = $request->validate([
+    //         'profile_id' => 'required|exists:user_profiles,id',
+    //         'room_id' => 'required|exists:rooms,id',
+    //         'rental_agreement_id' => 'required|exists:rental_agreements,id',
+    //         'payment_status' => 'required|in:paid,due,overdue',
+    //         'status' => 'required|in:active,inactive,evicted,moved_out',
+    //     ]);
+
+    //     $tenant = Tenant::create($validated);
+
+    //     $user = $tenant->userProfile->user;
+    //     $user -> steps = '6';
+    //     $user->save();
+
+    //     return $this->successResponse(['tenant' => $tenant], 'Tenant added successfully.');
+    // }
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -34,15 +53,38 @@ class TenantController extends Controller
             'payment_status' => 'required|in:paid,due,overdue',
             'status' => 'required|in:active,inactive,evicted,moved_out',
         ]);
-
+    
+        Log::info('Validated tenant data:', $validated);
+    
         $tenant = Tenant::create($validated);
-
-        $user = $tenant->userProfile->user;
-        $user -> steps = '6';
-        $user->save();
-
+    
+        Log::info('Created tenant:', ['tenant_id' => $tenant->id]);
+    
+        try {
+            $tenant->rentalAgreements()->attach($validated['rental_agreement_id']);
+            Log::info('Attached rental agreement to tenant.', [
+                'tenant_id' => $tenant->id,
+                'rental_agreement_id' => $validated['rental_agreement_id']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to attach rental agreement:', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    
+        if ($tenant->userProfile && $tenant->userProfile->user) {
+            $user = $tenant->userProfile->user;
+            $user->steps = '6';
+            $user->save();
+    
+            Log::info('Updated user steps to 6', ['user_id' => $user->id]);
+        } else {
+            Log::warning('User profile or user not found for tenant:', ['tenant_id' => $tenant->id]);
+        }
+    
         return $this->successResponse(['tenant' => $tenant], 'Tenant added successfully.');
     }
+    
 
     public function show($tenant_id)
     {
@@ -57,11 +99,11 @@ class TenantController extends Controller
     //getTenantViaRoomId is used in landlord
     public function getTenantViaRoomId($room_id)
     {
-        $tenants = Tenant::whereHas('rentalAgreement.reservation.room', function($query) use ($room_id) {
-            $query->where('id', $room_id);
-        })
-        ->with('rentalAgreement.reservation.room', 'userProfile.user', 'userProfile.address')
-        ->get();
+        $tenants = Tenant::with(['userProfile.user', 'rentalAgreement.reservation.room'])
+        ->whereHas('rentalAgreement.reservation', function ($query) use ($room_id) {
+            $query->where('room_id', $room_id);
+        })->get();
+
 
         if ($tenants->isEmpty()) {
             return $this->notFoundResponse([], 'Tenant not found');
@@ -239,7 +281,7 @@ class TenantController extends Controller
         ->orderBy('billing_month', 'desc')
         ->first();
 
-        $rentalAgreements = RentalAgreement::with(['reservation.room.property'])
+        $rentalAgreement = RentalAgreement::with(['reservation.room.property'])
         ->whereHas('reservation', function ($query) use ($profile_id) {
             $query->where('profile_id', $profile_id);
         })
@@ -289,7 +331,7 @@ class TenantController extends Controller
         return $this->successResponse([
             'tenant' => $tenant,
             'payment_history' => $paymentHistory,
-            'rental_agreements' => $rentalAgreements, // Include rental agreements
+            'rental_agreements' => $rentalAgreement, // Include rental agreements
             'notifications' => $notification,
         ], 'Tenant fetched successfully.');
     }
