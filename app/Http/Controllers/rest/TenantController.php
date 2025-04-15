@@ -322,13 +322,22 @@ class TenantController extends Controller
         $nextBillingMonth = $billing
             ? Carbon::parse($billing->billing_month)->addMonth()->format('Y-m-d')
             : null;
+        
+        //latestMonthlyRent is wrong I just realized I can use the notifiable to get into the 
+        // notification->billing->billable->rentalAgreement->reservation->room->property
+        
+        $latestMonthlyRent = Billing::with('billable.rentalAgreement', 'billable.rentalAgreement.reservation.room', 'billable.rentalAgreement.reservation.room.property') // 🔗 load billable + nested rentalAgreement
+            ->where('profile_id', $profile_id)
+            ->where('billing_title', 'Monthly Rent')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        // if billable is a Tenant model, get rental agreement from it
+    
 
-        // $paymentHistory = Billing::with('payments')->where('profile_id', $profile_id)
-        //     ->orderBy('billing_month', 'desc')
-        //     ->get();
         $paymentHistory = Billing::with(['payments', 'rentalAgreement'])
         ->where('profile_id', $profile_id)
-        ->where('billable_type', \App\Models\RentalAgreement::class)
+        ->where('billable_type', RentalAgreement::class)
         ->orderBy('billing_month', 'desc')
         ->get();
 
@@ -338,6 +347,7 @@ class TenantController extends Controller
             'tenant' => $tenant,
             'payment_history' => $paymentHistory,
             'rental_agreements' => $rentalAgreement, // Include rental agreements
+            'latest_monthly_rent' => $latestMonthlyRent, 
             'notifications' => $notification,
         ], 'Tenant fetched successfully.');
     }
