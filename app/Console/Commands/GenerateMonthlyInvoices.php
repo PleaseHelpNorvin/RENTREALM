@@ -55,10 +55,10 @@ class GenerateMonthlyInvoices extends Command
                 continue;
             }
     
-            Log::info("Latest billing found for tenant ID: {$tenant->id}, Billing Month: {$latestBilling->billing_month}");
+            Log::info("Latest billing found for tenant ID: {$tenant->id}, Billing Month: {$latestBilling->created_at}");
     
             // 🔹 Step 2: Determine the next billing date
-            $nextBillingDate = Carbon::parse($latestBilling->billing_month)->addMonth()->format('Y-m-d');
+            $nextBillingDate = Carbon::parse($latestBilling->created_at)->addMonth()->format('Y-m-d');
             Log::info("Next billing date for tenant ID: {$tenant->id} is {$nextBillingDate}");
     
             // 🔹 Step 3: Ensure we only generate invoices **on the correct billing date**
@@ -99,7 +99,7 @@ class GenerateMonthlyInvoices extends Command
             // 🔹 Step 7: Send notification to the tenant
             $billing->notifications()->create([
                 'user_id' => $tenant->userProfile->user_id,
-                'title' => 'New Rent Invoice Available',
+                'title' => 'Monthly Rent billing for Month of' . Carbon::now()->format('F'),
                 'message' => "Your rent for " . Carbon::parse($nextBillingDate)->format('F Y') . 
                             " is due on " . Carbon::parse($nextBillingDate)->format('M d, Y') . 
                             ". Amount: PHP {$billing->total_amount}.",
