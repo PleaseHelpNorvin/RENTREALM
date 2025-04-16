@@ -206,6 +206,8 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('users-lists-with-relations', [UserController::class, 'getUsersAndItsRelations']);
         Route::get('admin-show-tenant-by-profile-id/{profile_id}', [TenantController::class, 'adminShowTenantByProfileId']);
         Route::post('send-overdue-warning-to-tenant',[NotificationController::class, 'sendOverdueWarningToTenant']);
+        Route::put('update-user-data/{user_id}', [TenantController::class, 'updateUserData']);
+        Route::put('update-tenant-profile/{tenant_id}', [TenantController::class, 'updateTenantProfile']);
     });
 });
 

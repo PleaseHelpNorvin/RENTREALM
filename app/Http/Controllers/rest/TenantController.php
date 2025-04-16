@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\rest;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Tenant;
 use App\Models\Billing;
 use App\Models\Reservation;
@@ -347,10 +348,84 @@ class TenantController extends Controller
         return $this->successResponse([
             'tenant' => $tenant,
             'payment_history' => $paymentHistory,
-            'rental_agreements' => $rentalAgreement, // Include rental agreements
+            'rental_agreements' => $rentalAgreement, 
             'latest_rent_notice' => $latestRentNotice, 
             'notifications' => $notification,
         ], 'Tenant fetched successfully.');
+    }
+
+    public function updateUserData(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->notFoundResponse(null, 'User not found');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+
+        if (isset($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+
+        $user->save();
+
+        return $this->successResponse($user, 'User updated successfully');
+    }
+
+    public function updateTenantProfile(Request $request, $tenant_id)
+    {
+        $tenant = Tenant::with('userProfile.address')->find($tenant_id);
+
+        if (!$tenant) {
+            return $this->notFoundResponse(null, 'Tenant not found');
+        }
+
+        $validated = $request->validate([
+            'phone_number' => 'required|string|max:15',
+            'social_media_links' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
+            'driver_license_number' => 'nullable|string|max:255',
+            'national_id' => 'nullable|string|max:255',
+            'passport_number' => 'nullable|string|max:255',
+            'social_security_number' => 'nullable|string|max:255',
+            'address' => 'required|array',
+            'address.line_1' => 'required|string|max:255',
+            'address.line_2' => 'nullable|string|max:255',
+            'address.province' => 'nullable|string|max:255',
+            'address.country' => 'nullable|string|max:255',
+            'address.postal_code' => 'nullable|string|max:10',
+        ]);
+
+        $profile = $tenant->userProfile;
+
+        if (!$profile) {
+            return $this->notFoundResponse(null, 'User profile not found');
+        }
+
+        $profile->update([
+            'phone_number' => $validated['phone_number'],
+            'social_media_links' => $validated['social_media_links'],
+            'occupation' => $validated['occupation'],
+            'driver_license_number' => $validated['driver_license_number'],
+            'national_id' => $validated['national_id'],
+            'passport_number' => $validated['passport_number'],
+            'social_security_number' => $validated['social_security_number'],
+        ]);
+
+        $profile->address()->updateOrCreate([], $validated['address']);
+
+        // Re-load just to reflect fresh data if needed
+        $profile->load('address');
+
+        return $this->successResponse(['tenant' => $profile], 'Tenant profile updated successfully');
     }
 
     
