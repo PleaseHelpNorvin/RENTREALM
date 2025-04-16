@@ -195,10 +195,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('get-requested-maintenance-requests', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequested']);
         Route::patch('patch-maintenance-request-to-assigned/{maintenance_request_id}/{handyman_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToAssigned']);
         Route::patch('patch-maintenance-request-to-complete/{maintenance_request_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
+    }); 
 
-        
-
-        // Route::post('create-maintenance-request', [MaintenanceRequestController::class, 'createMaintenanceRequest']);
+    Route::prefix('billing')->group(function () {
+        Route::get('index', [BillingController::class, 'index']);
     }); 
 
     Route::prefix('user')->group(function () {

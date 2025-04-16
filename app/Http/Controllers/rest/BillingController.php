@@ -11,7 +11,11 @@ class BillingController extends Controller
 {
     //
     public function index() {
-        $billing = Billing::all();
+        $billing = Billing::with(
+            'billable.reservation.room',
+            'userProfile.user',
+            'payments.payable',
+        )->get();
     
         if ($billing->isEmpty()) {
             return $this->notFoundResponse([], 'No billing records found');
