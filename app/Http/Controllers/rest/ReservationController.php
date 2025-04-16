@@ -14,12 +14,13 @@ use App\Http\Controllers\Controller;
 class ReservationController extends Controller
 {
     public function index() {
-        $reservations = Reservation::all();
+        $reservations = Reservation::with('room', 'room.property', 'userProfile','userProfile.user', 'approvedBy')->get();
 
         $reservations = $reservations->map(function ($reservation) {
             return [
                 'id' => $reservation->id,
                 'profile_id' => $reservation->profile_id,
+                'reservation_code' => $reservation->reservation_code,
                 'room_id' => $reservation->room_id,
                 'payment_method' => $reservation->payment_method,
                 'reservation_payment_proof_url' => collect(json_decode($reservation->reservation_payment_proof_url))->map(function ($url) {
@@ -30,7 +31,10 @@ class ReservationController extends Controller
                 'approval_date' => $reservation->approval_date,
                 'created_at' => $reservation->created_at,
                 'updated_at' => $reservation->updated_at,
-            ];
+                'room' => $reservation->room,
+                'user_profile'=> $reservation->userProfile,
+                'approvedBy' => $reservation->approvedBy,
+            ];  
         });
 
         return $this->successResponse(['reservations' => $reservations], 'Reservations fetched successfully');
@@ -94,8 +98,8 @@ class ReservationController extends Controller
     
         // Manually retrieve data instead of expecting JSON
         $validatedData = $request->validate([
-            'status' => 'required|in:pending,approved',
-            'approved_by' => 'required|exists:users,id',
+            'status' => 'required|in:pending,approved,rejected',
+            'approved_by' => 'exists:users,id',
         ]);
     
         $reservation->update([
@@ -106,15 +110,16 @@ class ReservationController extends Controller
 
         $room = Room::find($reservation->room_id);
 
-        if ($validatedData['status'] == 'pending') {
+        if ($validatedData['status'] == 'pending' || $validatedData['status'] == 'rejected') {
             $room->status = 'vacant'; // or 'occupied'
         } 
+        
         $room->save();
 
         $user = $reservation->userProfile->user;
     
         // If the reservation status is 'pending', update user steps to '3'
-        if ($validatedData['status'] == 'pending') {
+        if ($validatedData['status'] == 'pending' || $validatedData['status'] == 'rejected') {
             $user->steps = '3';
         }
         // If the reservation status is 'approved', update user steps to '4'
@@ -129,17 +134,26 @@ class ReservationController extends Controller
         
         $clientId = $reservation->userProfile->user_id;
         $createdAt = $reservation->created_at;
-        $reservation->notifications()->create([
-            'user_id' => $clientId,
-            'title' => "Reservation Accepted!",
-            'message' => "Your Reservation on $createdAt has been accepted. Please Proceed to the commitment agreement signing alongside with the rental payment.",
-            'is_read' => false
-        ]);
+        
+       if ($validatedData['status'] == 'approved') {
+            $reservation->notifications()->create([
+                'user_id' => $clientId,
+                'title' => "Reservation Accepted!",
+                'message' => "Your Reservation on $createdAt has been accepted. Please Proceed to the commitment agreement signing alongside with the rental payment.",
+                'is_read' => false
+            ]);
+       }
+
+        if($validatedData['status'] == 'rejected') {
+            $reservation->notifications()->create([
+                'user_id' => $clientId,
+                'title' => "Reservation Rejected!",
+                'message' => "Your Reservation on $createdAt has been Rejected.",
+                'is_read' => false
+            ]);
+        }
     
         return $this->successResponse(['reservation' => $reservation], 'Reservation status updated successfully');
-        // use something like for this endpoint
-        // method: patch
-        // http://127.0.0.1:8000/api/landlord/reservation/updateStatus/1?status=confirmed&approved_by=1
     }
 
     public function show($id)

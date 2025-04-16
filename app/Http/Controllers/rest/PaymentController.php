@@ -60,6 +60,7 @@ class PaymentController extends Controller
             'amount' => 'required|numeric',
             'payment_description' => 'required|string',
         ]);
+        Log::info('Validated payment request data:', $validatedData);
 
         $billing = Billing::where('id', $validatedData['billing_id'])->first();
 
@@ -311,8 +312,11 @@ class PaymentController extends Controller
                 }
 
             } else {
-                Log::info("creating tenant....");
-            
+                Log::info("Creating tenant...", [
+                    'profile_id' => $billing->profile_id,
+                    'rental_agreement_id' => $billing->billable_id,
+                    'status' => $status,
+                ]);
                 $tenant = Tenant::create([
                     'profile_id' => $billing->profile_id,
                     'rental_agreement_id' => $billing->billable_id,
