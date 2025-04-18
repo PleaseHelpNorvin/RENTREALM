@@ -452,4 +452,15 @@ class PaymentController extends Controller
         }
     
         return $this->successResponse(['receipts' => $receiptUrls], "Receipts fetched successfully");
-    }}
+    }
+
+    public function adminIndex() {
+        $payments = Payment::with('payable.reservation.room.property', 'billing.userProfile.user')->get();
+        
+        if ($payments->isEmpty()) {
+            return $this->notFoundResponse([], "no payments found");
+        }
+        
+        return $this->successResponse(['payments' => $payments], "fetched payments successfully");
+    }
+}

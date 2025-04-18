@@ -20,6 +20,8 @@ return new class extends Migration
             $table->decimal('amount_paid', 10, 2)->default(0.00); // Amount paid
             $table->decimal('remaining_balance', 10, 2)->default(0.00); // Amount left unpaid
             $table->date('billing_month'); // Billing date (e.g., monthly rent)\
+            $table->dateTime('due_date');
+
             $table->enum('status', ['pending', 'partial', 'paid'])->default('pending'); // Billing status
             $table->string('checkout_session_id')->nullable();
             $table->timestamps();

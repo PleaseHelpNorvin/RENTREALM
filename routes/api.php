@@ -201,6 +201,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [BillingController::class, 'index']);
     }); 
 
+    Route::prefix('payment')->group(function () {
+        Route::get('admin-index', [PaymentController::class, 'adminIndex']);
+    });
+
     Route::prefix('user')->group(function () {
         // Route::get('index', [UserController::class, 'index']);
         Route::get('users-lists-with-relations', [UserController::class, 'getUsersAndItsRelations']);

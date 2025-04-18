@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Billing extends Model
 {
@@ -26,6 +27,14 @@ class Billing extends Model
         'billing_month' => 'date',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($billing) {
+            if (!$billing->due_date) {
+                $billing->due_date = now()->addMonth();
+            }
+        });
+    }
 
     public function userProfile() {
         return $this->belongsTo(UserProfile::class, 'profile_id');
