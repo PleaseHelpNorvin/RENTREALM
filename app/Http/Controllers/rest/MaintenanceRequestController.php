@@ -16,13 +16,18 @@ class MaintenanceRequestController extends Controller
 
     public function index()
     {
-        $maintenanceRequests = MaintenanceRequest::all()->map(function ($request) {
+        $maintenanceRequests = MaintenanceRequest::with(
+            'tenant.userProfile.user',
+            'room.property',
+            'handyman.user',
+            'assignedBy',
+            'approvedBy'
+        )->get()->each(function ($request) {
             $request->images = collect($request->images)->map(function ($imagePath) {
                 return asset($imagePath); 
             })->toArray();
-    
-            return $request;
         });
+        
         if ($maintenanceRequests->isEmpty()) {
             return $this->notFoundResponse([], 'No Maintenance Requests at the Moment Found');
         }
