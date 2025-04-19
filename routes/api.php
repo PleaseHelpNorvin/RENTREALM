@@ -106,7 +106,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{agreementCode}', [RentalAgreementController::class, 'show']);
         Route::get('show/{id}/pdf', [RentalAgreementController::class, 'downloadPdf']);
         Route::post('store/{reservation_id}', [RentalAgreementController::class, 'store']);
-        Route::get('view-pdf/{id}', [RentalAgreementController::class, 'generatePdfUrl']);
+        Route::get('view-pdf/{agreementId}', [RentalAgreementController::class, 'generatePdfUrl']);
         Route::get('index-profileId/{profileId}', [RentalAgreementController::class, 'indexByProfileId']);
         Route::get('show-active-Rental-agreement/{profileId}', [RentalAgreementController::class, 'ShowActiveRentalAgreementByProfileId']);
         Route::get('view-contract-countdown/{agreementId}', [RentalAgreementController::class, 'ViewContractCountdown']);
@@ -175,6 +175,8 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('show/{rentalagreement_id}', [RentalAgreementController::class, 'show']);
         Route::post('update/{rentalagreement_id}', [RentalAgreementController::class, 'update']);
         Route::get('get-rooms-by-profileid/{profileId}', [RentalAgreementController::class, 'getRoomsByProfileId']);
+        Route::get('view-pdf/{agreementId}', [RentalAgreementController::class, 'generatePdfUrl']);
+
     });
 
     Route::prefix('handy_man')->group(function () {
@@ -204,7 +206,8 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
     Route::prefix('payment')->group(function () {
         Route::get('admin-index', [PaymentController::class, 'adminIndex']);
     });
-
+    
+    
     Route::prefix('user')->group(function () {
         // Route::get('index', [UserController::class, 'index']);
         Route::get('users-lists-with-relations', [UserController::class, 'getUsersAndItsRelations']);

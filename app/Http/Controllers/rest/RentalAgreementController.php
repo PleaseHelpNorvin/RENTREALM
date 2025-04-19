@@ -21,17 +21,16 @@ class RentalAgreementController extends Controller
 {
     public function index()
     {
-        $rentalAgreements = RentalAgreement::all();
-
-        // foreach ($rentalAgreements as $agreement) {
-        //     Log::info('Stored Signature:', ['signature' => $agreement->signature_svg_string]);
-        // }
+        $rentalAgreements = RentalAgreement::with('pivotTenants.userProfile.user', 'reservation',)->get();
 
         if ($rentalAgreements->isEmpty()) {
             return $this->errorResponse(null, "no rental agreements found");
         }
 
-    
+        foreach ($rentalAgreements as $agreement) {
+            $agreement->signature_png_string = url('storage/' . $agreement->signature_png_string);
+        }
+        
         return $this->successResponse(
             ['rental_agreements' => $rentalAgreements], 
             "Rental agreements successfully fetched"
