@@ -102,4 +102,21 @@ class HandymanController extends Controller
 
         return $this->successResponse(['handyman' => $handyman], 'Handyman terminated successfully');
     }
+
+    public function adminHandymanIndex()
+    {
+        $handymens = Handyman::with(
+            'user', 
+            'maintenanceRequests.tenant.userProfile.user', 
+            'maintenanceRequests.assignedBy', 
+            'maintenanceRequests.room.property',
+            'maintenanceRequests.approvedBy',
+            )->get();
+
+        if (!$handymens) {
+            return $this->notFoundResponse([], 'Handyman not found');
+        }
+
+        return $this->successResponse(['handymens' => $handymens ]);
+    }
 }

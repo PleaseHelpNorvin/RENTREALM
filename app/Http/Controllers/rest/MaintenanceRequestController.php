@@ -27,11 +27,13 @@ class MaintenanceRequestController extends Controller
                 return asset($imagePath); 
             })->toArray();
         });
+
+        $handymen = Handyman::with('user', 'maintenanceRequests')->get();
         
         if ($maintenanceRequests->isEmpty()) {
             return $this->notFoundResponse([], 'No Maintenance Requests at the Moment Found');
         }
-        return $this->successResponse(['maintenance_requests' => $maintenanceRequests], 'Maintenance Requests Fetched Successfully');
+        return $this->successResponse(['maintenance_requests' => $maintenanceRequests, 'handymens' => $handymen], 'Maintenance Requests Fetched Successfully');
     }
 
     public function indexByTenantId($tenantId)

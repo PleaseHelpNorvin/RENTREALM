@@ -187,6 +187,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('get-available-handyman-list', [HandymanController::class, 'getAvailableHandymanList']);
         Route::get('get-terminated-handyman-list', [HandymanController::class, 'getTerminatedHandymanList']);
         Route::get('get-busy-handyman-list', [HandymanController::class, 'getBusyHandymanList']);
+        Route::get('admin-handyman-index', [HandymanController::class, 'adminHandymanIndex']);
     });
 
     Route::prefix('maintenance_request')->group(function () {
