@@ -135,7 +135,7 @@ class AuthController extends Controller
         // dd($request->all());   
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,',
+            'email' => 'required|email|unique:users,email,' . $request->user_id,
             'password' => 'sometimes|nullable|min:6',
             'status' => 'required|nullable|in:available,busy', // Or whatever statuses you use
             'user_id' => 'required|integer',
