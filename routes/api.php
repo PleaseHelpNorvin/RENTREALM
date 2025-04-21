@@ -10,6 +10,7 @@ use App\Http\Controllers\rest\AddressController;
 use App\Http\Controllers\rest\BillingController;
 use App\Http\Controllers\rest\InquiryController;
 use App\Http\Controllers\rest\PaymentController;
+use App\Http\Controllers\rest\ReportsController;
 use App\Http\Controllers\rest\HandymanController;
 use App\Http\Controllers\rest\PropertyController;
 use App\Http\Controllers\rest\PickedRoomController;
@@ -209,6 +210,9 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('admin-index', [PaymentController::class, 'adminIndex']);
     });
     
+    Route::prefix('reports')->group(function () {
+        Route::get('reports',[ReportsController::class, 'index']);
+    });
     
     Route::prefix('user')->group(function () {
         // Route::get('index', [UserController::class, 'index']);
