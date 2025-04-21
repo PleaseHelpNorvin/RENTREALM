@@ -5,6 +5,8 @@ use Illuminate\Support\Str;
 use App\Models\Billing;
 use Illuminate\Http\Request;
 use App\Models\RentalAgreement;
+use App\Models\User;
+
 use App\Http\Controllers\Controller;
 
 class BillingController extends Controller
@@ -108,7 +110,7 @@ class BillingController extends Controller
             return $this->notFoundResponse([], 'No billing records found for this rental agreement');
         }
 
-        return $this->successResponse(['billings' => $billing], 'Billing records retrieved successfully');
+        return $this->successResponse(['billings' => $billing], 'Billing records retrieved succ essfully');
     }
 
     public function getBillingDetails($billingId)
@@ -122,7 +124,22 @@ class BillingController extends Controller
         return $this->successResponse(['billings' => [$billing]], "Billing details retrieved successfully.");
     }
 
-    public function retrieveLatestBillingForMonthlyRent() {
-        //next to work on
+    public function retrieveLatestBillingForMonthlyRent($user_id)
+    {
+        $user = User::with('userProfile.billings')->find($user_id);
+    
+        if (!$user) {
+            return null; // or throw an exception
+        }
+    
+        // Flatten all billings from all user profiles and filter them
+        $latestBilling = $user->userProfile
+            ->flatMap(function ($profile) {
+                return $profile->billings->where('billing_title', 'Monthly Rent');
+            })
+            ->sortByDesc('billing_month')
+            ->first();
+    
+        return $this->successResponse(['latest_rent_billing' => $latestBilling], 'success latest billing');
     }
 }

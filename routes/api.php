@@ -84,6 +84,7 @@ Route::prefix('tenant')->middleware('auth:sanctum')->group(function () {
         Route::get('index',[BillingController::class, 'index']);
         Route::get('getbillingforrentalagreement/{rentalagreement_code}', [BillingController::class, 'getBillingForRentalAgreement']);
         Route::get('get-billing-details/{billingId}', [BillingController::class, 'getBillingDetails']);
+        Route::get('retrieve-latest-billing-for-monthly-rent/{user_id}', [BillingController::class, 'retrieveLatestBillingForMonthlyRent']);
     });
 
     Route::prefix('payment')->group(function() {
