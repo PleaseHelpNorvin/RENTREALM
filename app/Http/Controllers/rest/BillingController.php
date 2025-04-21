@@ -121,4 +121,8 @@ class BillingController extends Controller
     
         return $this->successResponse(['billings' => [$billing]], "Billing details retrieved successfully.");
     }
+
+    public function retrieveLatestBillingForMonthlyRent() {
+        //next to work on
+    }
 }

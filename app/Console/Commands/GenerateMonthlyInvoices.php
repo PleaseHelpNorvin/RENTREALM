@@ -99,7 +99,7 @@ class GenerateMonthlyInvoices extends Command
             // 🔹 Step 7: Send notification to the tenant
             $billing->notifications()->create([
                 'user_id' => $tenant->userProfile->user_id,
-                'title' => 'Monthly Rent billing for Month of' . Carbon::now()->format('F'),
+                'title' => 'Monthly Rent billing for' . Carbon::now()->format('F'),
                 'message' => "Your rent for " . Carbon::parse($nextBillingDate)->format('F Y') . 
                             " is due on " . Carbon::parse($nextBillingDate)->format('M d, Y') . 
                             ". Amount: PHP {$billing->total_amount}.",
