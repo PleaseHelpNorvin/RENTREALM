@@ -84,6 +84,11 @@ class RentalAgreement extends Model
         return $this->belongsToMany(Tenant::class, 'rental_agreement_tenant');
     }
 
+    public function primaryTenant()
+    {
+        return $this->hasOne(Tenant::class); // or custom logic to determine the main one
+    }
+
 
 }
 

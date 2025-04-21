@@ -66,4 +66,5 @@ class Tenant extends Model
     {
         return $this->morphMany(Notification::class, 'notifiable'); 
     }
+
 }

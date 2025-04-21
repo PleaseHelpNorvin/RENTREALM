@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\rest;
-
+use Illuminate\Support\Facades\Log;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\Tenant;
 use App\Models\Billing;
+use App\Models\Payment;
 use App\Models\Notification;
+use App\Models\MaintenanceRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -15,7 +17,7 @@ class ReportsController extends Controller
     public function index() {
         //tenant reports
 
-        $tenants = Tenant::with(['rentalAgreements.reservation.room.property','userProfile.user'])->get();
+        $tenants = Tenant::with(['rentalAgreements.reservation.room.property','tenant'])->get();
         $tenantReports = $tenants->map(function ($tenant, $index) {
             $rentalAgreement = $tenant->rentalAgreements->first();
     
@@ -31,52 +33,19 @@ class ReportsController extends Controller
             ];
         });
 // ================================================================
-        //Rent collection reports
-        
-        $billings = Billing::with([
-            'billable' => function ($morphTo) {
-                $morphTo->morphWith([
-                    RentalAgreement::class => ['reservation.room.property'],
-                    Tenant::class => ['userProfile.user', 'rentalAgreements.reservation.room.property'],
-                ]);
-            }
-        ])->get();
 
-        $rentCollectionReports = $billings->map(function ($billing, $index) {
-            $code = 'RC-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
-            $amount = '₱' . number_format($billing->total_amount, 2);
-        
-            $tenantName = 'N/A';
-            $apartment = 'N/A';
-        
-            if ($billing->billable instanceof Tenant) {
-                $userProfile = $billing->billable->userProfile;
-                $tenantName = optional($userProfile?->user)->name ?? 'N/A';
-            
-                $rentalAgreement = $billing->billable->rentalAgreements->first();
-                $apartment = optional($rentalAgreement?->reservation?->room?->property)->name . ' - ' .
-                             optional($rentalAgreement?->reservation?->room)->room_code ?? 'No Info';
-            } elseif ($billing->billable instanceof RentalAgreement) {
-                $rentalAgreement = $billing->billable;
-            
-                $tenant = $rentalAgreement->tenants->first();
-                $tenantName = optional($tenant?->userProfile?->user)->name ?? 'N/A';
-            
-                $apartment = optional($rentalAgreement?->reservation?->room?->property)->name . ' - ' .
-                             optional($rentalAgreement?->reservation?->room)->room_code ?? 'No Info';
-            }
-            $month = optional($billing->billing_month)->format('m-d-Y') ?? 'N/A';
-            $status = ucfirst($billing->status); 
-        
-            return [
-                'code' => $code,
-                'tenant' => $tenantName,
-                'apartment' => $apartment,
-                'month' => $month,
-                'amount' => $amount,
-                'status' => $status,
-            ];
-        });
+    $payments = Payment::with('billing.userProfile.user')->get();
+    $rentCollectionReports = $payments->map(function ($payment) {
+        return [
+            'code' => 'RC-' . str_pad($payment->id, 3, '0', STR_PAD_LEFT), // Generate a unique code for each payment
+            'tenant' => $payment->billing->userProfile->user->name, // Assuming the tenant name is in the related profile
+            'title' => $payment->billing->billing_title,
+            'month' => \Carbon\Carbon::parse($payment->billing->billing_month)->format('m-d-Y'), // Format month to desired format
+            'amount' => '₱' . number_format($payment->amount_paid, 2), // Format amount with currency symbol
+            'status' => ucfirst($payment->status), // Capitalize the status
+        ];
+    });
+   
 // ================================================================
         // unit occupancy reports
 
@@ -96,42 +65,58 @@ class ReportsController extends Controller
         })->values();
 // ================================================================
         //maintenance requests reports
-        
+        $maintenanceRequests = MaintenanceRequest::with('tenant.userProfile.user', 'room.property')->get();
+
+        // Map maintenance requests to match the table format
+        $maintenanceRequestsReports = $maintenanceRequests->map(function ($request, $index) {
+            $tenantName = optional($request->tenant->userProfile->user)->name ?? 'N/A';
+            $apartment = optional($request->room->property)->name . ' - ' . optional($request->room)->room_code ?? 'No Info';
+            $issue = $request->title ?? 'No Issue';
+            $status = $request->status ?? 'pending';
+    
+            return [
+                'ticket_code' => 'MR-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT),
+                'tenant' => $tenantName,
+                'apartment' => $apartment,
+                'issue' => $issue,
+                'status' => $status, // Keep status as a string
+            ];
+        });
         // $maintenanceRequestsReports;
 
 // ================================================================
         $notifications = Notification::with('notifiable')->get();
 
-        $mappedNotifications = $notifications->map(function($notification) {
-            // Dynamically load the notifiable model based on the type
+        $mappedNotifications = $notifications->map(function($notification, $index) {
             $notifiable = $notification->notifiable;
             $action = '';
-
-            // Check the type of notifiable model and get the appropriate action message
+        
             if ($notification->notifiable_type == 'App\\Models\\Reservation') {
-                $action = 'Reservation ' . $notifiable->status . ' - ' . $notifiable->reservation_code;
+                $action = $notification->message;
             } elseif ($notification->notifiable_type == 'App\\Models\\Payment') {
-                $action = 'Payment ' . $notifiable->status . ' - ' . $notifiable->payment_method;
+                $action = $notification->message;
             } elseif ($notification->notifiable_type == 'App\\Models\\Billing') {
-                $action = 'Billing for ' . $notifiable->created_at->format('F Y');
+                $action = $notification->message;
+            } elseif($notification->notifiable_type == 'App\Models\MaintenanceRequest') {
+                $action = $notification->message;
             }
-
-            // Format the date/time
+        
             $dateTime = $notification->created_at->format('F j, Y - g:i A');
-
+        
             return [
                 'id' => $notification->id,
+                'aud_code' => 'LOG-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT),
                 'user' => User::find($notification->user_id)->name,
                 'action' => $action,
                 'date_time' => $dateTime
             ];
-    });
+        });
 
         return $this->successResponse([
             'tenant_reports' => $tenantReports,
             'rent_collection_reports' => $rentCollectionReports,
             'unit_occupancy_reports' => $groupedOccupancy,
-            // 'maintenance_requests_reports'
+            'maintenance_requests_reports' => $maintenanceRequestsReports,
             'audits_logs_activity_reports' => $mappedNotifications,
         ],'success');
     }
