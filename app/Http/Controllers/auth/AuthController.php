@@ -129,6 +129,50 @@ class AuthController extends Controller
         ], 'user Handyman created successfully');
     }
 
+
+    public function updateHandyman(Request $request)
+    {
+        // dd($request->all());   
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,',
+            'password' => 'sometimes|nullable|min:6',
+            'status' => 'required|nullable|in:available,busy', // Or whatever statuses you use
+            'user_id' => 'required|integer',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        $validatedData = $validator->validated();
+        $id = $validatedData['user_id'];
+
+        $user = User::findOrFail($id);
+    
+        // Update user details
+        $user->name = $request->input('name', $user->name);
+        $user->email = $request->input('email', $user->email);
+        
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+    
+        $user->save();
+    
+        // Update handyman status
+        $handyman = Handyman::where('user_id', $user->id)->first();
+    
+        if ($handyman && $request->has('status')) {
+            $handyman->status = $request->status;
+            $handyman->save();
+        }
+    
+        return $this->successResponse([
+            'user' => $user,
+            'handyman' => $handyman,
+        ], 'Handyman updated successfully');
+    }
+    
     public function logout(Request $request) 
     {
         $request->user()->currentAccessToken()->delete();
