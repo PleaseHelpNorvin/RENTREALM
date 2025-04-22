@@ -19,6 +19,8 @@ use App\Http\Controllers\rest\UserProfileController;
 use App\Http\Controllers\rest\NotificationController;
 use App\Http\Controllers\rest\RentalAgreementController;
 use App\Http\Controllers\rest\MaintenanceRequestController;
+use App\Http\Controllers\rest\SettingController;
+use App\Http\Controllers\rest\DashboardController;
 
 
 Route::post('/register-webhook', [PaymentController::class, 'registerWebhook']);
@@ -222,6 +224,17 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('send-overdue-warning-to-tenant',[NotificationController::class, 'sendOverdueWarningToTenant']);
         Route::put('update-user-data/{user_id}', [TenantController::class, 'updateUserData']);
         Route::put('update-tenant-profile/{tenant_id}', [TenantController::class, 'updateTenantProfile']);
+    });
+
+    Route::prefix('setting')->group(function () {
+        Route::post('update-or-create-setting',[SettingController::class, 'updateOrCreateSetting']);
+        Route::get('show-setting/{user_id}',[SettingController::class, 'show']);
+        Route::put('update-admin/{user_id}',[SettingController::class, 'updateAdmin']);
+        
+    });
+
+    Route::prefix('dashboard')->group(function () {
+        Route::get('index',[DashboardController::class, 'index']);
     });
 });
 

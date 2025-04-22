@@ -24,6 +24,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'admin_phone',
         'password',
         'role',
         'steps'
@@ -114,5 +115,8 @@ class User extends Authenticatable
         return $this->hasMany(MaintenanceRequest::class, 'approved_by');
     }
 
-    
+    public function setting()
+    {
+        return $this->hasOne(Setting::class);
+    } 
 }

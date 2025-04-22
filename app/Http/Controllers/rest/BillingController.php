@@ -127,19 +127,19 @@ class BillingController extends Controller
     public function retrieveLatestBillingForMonthlyRent($user_id)
     {
         $user = User::with('userProfile.billings')->find($user_id);
-    
+
         if (!$user) {
-            return null; // or throw an exception
+            return $this->notFoundResponse(null,'User not found', );
         }
-    
-        // Flatten all billings from all user profiles and filter them
+
         $latestBilling = $user->userProfile
             ->flatMap(function ($profile) {
                 return $profile->billings->where('billing_title', 'Monthly Rent');
             })
             ->sortByDesc('billing_month')
             ->first();
-    
-        return $this->successResponse(['latest_rent_billing' => $latestBilling], 'success latest billing');
+
+
+        return $this->successResponse(['latest_rent_billing' => $latestBilling], 'Success latest billing');
     }
 }
