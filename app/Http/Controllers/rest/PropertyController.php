@@ -13,24 +13,67 @@ class PropertyController extends Controller
 {
     // Show all properties
     public function index()
-    {
-        $properties = Property::with('address')->get();
+{
+    $properties = Property::with('address', 'rooms')->get();
+    
+    // Initialize counters
+    $vacantProperties = 0;
+    $fullProperties = 0;
+    $totalOccupiedRooms = 0;
+    $totalVacantRooms = 0;
 
-        $properties->transform(function ($property) {
-            $property->property_picture_url = json_decode($property->property_picture_url, true);
-            return $property;
-        });
+    // Loop through each property and calculate counts
+    $properties->transform(function ($property) use (&$vacantProperties, &$fullProperties, &$totalOccupiedRooms, &$totalVacantRooms) {
+        $occupiedRooms = 0;
+        $vacantRooms = 0;
 
-        if ($properties->isEmpty()) {
-            return $this->notFoundResponse(null, 'No properties found.');
+        // Count property status
+        if ($property->status === 'vacant') {
+            $vacantProperties++;
+        } elseif ($property->status === 'full') {
+            $fullProperties++;
         }
 
-        return $this->successResponse(
-            ['properties' => $properties],
-            'Properties Fetched Successfully',
-            200
-        );
+        // Decode picture URLs if needed
+        $property->property_picture_url = json_decode($property->property_picture_url, true);
+
+        // Count room statuses for each property
+        foreach ($property->rooms as $room) {
+            if ($room->status === 'occupied') {
+                $occupiedRooms++;
+            } elseif ($room->status === 'vacant') {
+                $vacantRooms++;
+            }
+        }
+
+        // Add room counts to the property
+        $property->total_occupied_rooms = $occupiedRooms;
+        $property->total_vacant_rooms = $vacantRooms;
+
+        // Update global room counts
+        $totalOccupiedRooms += $occupiedRooms;
+        $totalVacantRooms += $vacantRooms;
+
+        return $property;
+    });
+
+    if ($properties->isEmpty()) {
+        return $this->notFoundResponse(null, 'No properties found.');
     }
+
+    return $this->successResponse(
+        [
+            'properties' => $properties,
+            'total_vacant_properties' => $vacantProperties,
+            'total_full_properties' => $fullProperties,
+        ],
+        'Properties Fetched Successfully',
+        200
+    );
+}
+
+    
+    
 
     // Store a new property
     public function store(Request $request)

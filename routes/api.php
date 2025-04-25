@@ -169,7 +169,7 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('reservation')->group(function() {
         Route::get('index',[ReservationController::class, 'index']);
-        Route::patch('updateStatus/{id}',[ReservationController::class, 'updateStatus']);
+        Route::post('updateStatus/{id}', [ReservationController::class, 'updateStatus']);
         Route::get('show/{id}',[ReservationController::class,'show']);
     });
 
