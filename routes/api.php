@@ -187,8 +187,8 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::post('create-handyman', [AuthController::class, 'createHandyman']);
         Route::post('post-update-handyman', [AuthController::class, 'updateHandyman']);
         Route::get('index', [HandymanController::class, 'index']);
-        Route::get('show/{handymanId}', [HandymanController::class, 'show']);
-        Route::patch('terminate-handyman/{handymanId}', [HandymanController::class, 'terminateHandyman']);
+        Route::get('show/{handymanId}', [HasndymanController::class, 'show']);
+        Route::post('terminate-handyman/{handymanId}', [HandymanController::class, 'terminateHandyman']);
         Route::get('get-available-handyman-list', [HandymanController::class, 'getAvailableHandymanList']);
         Route::get('get-terminated-handyman-list', [HandymanController::class, 'getTerminatedHandymanList']);
         Route::get('get-busy-handyman-list', [HandymanController::class, 'getBusyHandymanList']);
