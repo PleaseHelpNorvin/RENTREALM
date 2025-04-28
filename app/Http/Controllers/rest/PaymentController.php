@@ -59,13 +59,20 @@ class PaymentController extends Controller
             'billing_id' => 'required|numeric',
             'amount' => 'required|numeric',
             'payment_description' => 'required|string',
+            'selected_months_to_pay' => 'nullable|numeric',
         ]);
+
         Log::info('Validated payment request data:', $validatedData);
 
         $billing = Billing::where('id', $validatedData['billing_id'])->first();
 
         if (!$billing) {
             return response()->json(['error' => 'Billing record not found'], 404);
+        }
+
+        if (!empty($validatedData['selected_months_to_pay'])) {
+            $billing->selected_months_to_pay = $validatedData['selected_months_to_pay'];
+            $billing->save();
         }
     
         $userProfile = $billing->userProfile;
@@ -118,12 +125,13 @@ class PaymentController extends Controller
             // Extract Reference Number (if available)
             $billing->update(['checkout_session_id' => $checkoutSessionId]);
             // $this->retrievePayment($billing->id);
-
+            $selectedMonthsToPay = $validatedData['selected_months_to_pay'] ?? null;
 
             return $this->successResponse([
                 'checkout_url' => $checkoutUrl,
-                // 'payment_description' => $paymentDescription,
+                'selected_months_to_pay'=> $selectedMonthsToPay,
             ]);
+
         } else {
             // Log the error response for debugging
             return $this->errorResponse(
@@ -131,7 +139,6 @@ class PaymentController extends Controller
                 'Payment processing failed',
                 $response->status()
             );
-
         }
     }
 

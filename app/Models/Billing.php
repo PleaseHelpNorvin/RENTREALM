@@ -22,6 +22,7 @@ class Billing extends Model
         'status',
         'checkout_session_id',
         'is_advance_rent_payment',
+        'selected_months_to_pay',
     ];
 
     protected $casts = [
