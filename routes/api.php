@@ -199,10 +199,10 @@ Route::prefix('landlord')->middleware('auth:sanctum')->group(function () {
         Route::get('index', [MaintenanceRequestController::class, 'index']);
         Route::get('show/{maintenance_id)', [MaintenanceRequestController::class, 'show']);
         Route::get('update/{maintenance_id)', [MaintenanceRequestController::class, 'update']);
-        Route::patch('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
+        Route::post('patch-maintenance-request-to-requested/{maintenance_request_id}/{handyman_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToRequested']);
         Route::get('get-requested-maintenance-requests', [MaintenanceRequestController::class, 'getMaintenanceRequestListRequested']);
-        Route::patch('patch-maintenance-request-to-assigned/{maintenance_request_id}/{handyman_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToAssigned']);
-        Route::patch('patch-maintenance-request-to-complete/{maintenance_request_id}/{admin_id}', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
+        Route::post('/assign-maintenance-request', [MaintenanceRequestController::class, 'patchMaintenanceRequestToAssigned']);
+        Route::post('/approve-maintenance-request', [MaintenanceRequestController::class, 'patchMaintenanceRequestToComplete']);
     }); 
 
     Route::prefix('billing')->group(function () {
