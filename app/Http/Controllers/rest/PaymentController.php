@@ -119,8 +119,10 @@ class PaymentController extends Controller
             $billing->update(['checkout_session_id' => $checkoutSessionId]);
             // $this->retrievePayment($billing->id);
 
+
             return $this->successResponse([
                 'checkout_url' => $checkoutUrl,
+                // 'payment_description' => $paymentDescription,
             ]);
         } else {
             // Log the error response for debugging
@@ -142,6 +144,7 @@ class PaymentController extends Controller
         $billing = Billing::with('userProfile.user')
         ->where('id', $billingId)
         ->first();
+        
         
         
         if (!$billing || !$billing->checkout_session_id) {
@@ -188,8 +191,7 @@ class PaymentController extends Controller
                 $paymentId = $payments[0]['id'] ?? null;
                 $paymentStatus = $payments[0]['attributes']['status'] ?? null;
                 $paymentReference = $payments[0]['attributes']['payment_od'] ?? null;
-                $amountPaid = $payments[0]['attributes']['amount'] ?? null;
-                // $paymentMethod = $payments[0]['attributes']['payment_method_type'] ?? null;
+                $amountPaid = $payments[0]['attributes']['amount'] ?? 0;
                 $paymentMethod = $response['data']['attributes']['payment_method_used'] ?? null;
 
                 Log::info("Payment retrieved successfully", [
@@ -199,11 +201,25 @@ class PaymentController extends Controller
                     'payment_method' => $paymentMethod
                 ]);
 
+                
+
                 Log::info("======================================================");
+                $phpAmountPaid = $amountPaid /100;
                   // Call storePaymentAfterPayMongo() on success
-                if ($paymentStatus === 'paid') {
-                    $this->storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymentId, []);
+                if ($phpAmountPaid > $billing->total_amount) {
+                    // This is an advance payment, process it separately
+                    $this->storeAdvancePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymentId, []);
+                } else {
+                    // This is a regular payment, process it
+                    $this->storePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymentId, []);
                 }
+
+                // if ($paymentStatus === 'paid') {
+                //     $this->storePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymentId, []);
+                //     if($billing->billing_title === 'Monthly Rent' && $phpAmountPaid > $billing->total_amount) {
+                //         $this->storeAdvancePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymentId, []);
+                //     }
+                // }
     
                 return response()->json([
                     'payment_id' => $paymentId,
@@ -227,14 +243,14 @@ class PaymentController extends Controller
             
         // return $this->storePaymentAfterPayMongo($billingId, $amount, 'GCash', $paymentReference, null);
 
-        private function storePaymentAfterPayMongo($billingId, $amountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
+        private function storePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles)
         {
-            $centToPesoAmountPaid = $amountPaid / 100;
+            // $centToPesoAmountPaid = $amountPaid / 100;
         
             try {
                 Log::info('storePaymentAfterPayMongo called with:', [
                     'billingId' => $billingId,
-                    'amountPaid' => $centToPesoAmountPaid,
+                    'amountPaid' => $phpAmountPaid,
                     'paymentMethod' => $paymentMethod,
                     'paymentReference' => $paymongoPaymentRef,
                     'paymentProofFiles' => $paymentProofFiles
@@ -266,7 +282,7 @@ class PaymentController extends Controller
                 'payable_id' => $billing->billable_id,
                 'payable_type' => $billing->billable_type,
                 'profile_id' => $billing->profile_id,
-                'amount_paid' => $centToPesoAmountPaid,
+                'amount_paid' => $phpAmountPaid,
                 'payment_method' => $paymentMethod,
                 'paymongo_payment_reference' => $paymongoPaymentRef,
                 'payment_proof_url' => json_encode($paymentProofsUrls),
@@ -274,7 +290,7 @@ class PaymentController extends Controller
             ]);
         
             // Update Billing
-            $billing->amount_paid += $centToPesoAmountPaid;
+            $billing->amount_paid += $phpAmountPaid;
             $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
         
             if ($billing->remaining_balance <= 0) {
@@ -363,7 +379,7 @@ class PaymentController extends Controller
         }
                 
 
-    public function generatePdfReceipt(Payment $payment)
+    public function generatePdfReceipt(Payment $payment,  $receipt_title = null)
     {
         $payment->load('billing.userProfile.user');
     
@@ -384,12 +400,14 @@ class PaymentController extends Controller
         try {
             $user = optional($payment->billing->userProfile)->user;
     
+            $receiptTitle = $receipt_title ?? $payment->billing->billing_title;
+
             $pdf = Pdf::loadView('payments.receipt_pdf', [
                 'payment' => $payment,
                 'billing' => $payment->billing,
                 'user' => $user,
-                'receipt_title' => $payment->billing->billing_title,
-            ]);
+                'receipt_title' => $receiptTitle,
+            ]);    
     
             $pdf->save($pdfPath);
     
@@ -462,5 +480,84 @@ class PaymentController extends Controller
         }
         
         return $this->successResponse(['payments' => $payments], "fetched payments successfully");
+    }
+
+    // ============================================================================================================================
+
+    public function storeAdvancePaymentAfterPayMongo($billingId, $phpAmountPaid, $paymentMethod, $paymongoPaymentRef, $paymentProofFiles) {
+        try {
+            Log::info('storeAdvancePaymentAfterPayMongo called with:', [
+                'billingId' => $billingId,
+                'amountPaid' => $phpAmountPaid,
+                'paymentMethod' => $paymentMethod,
+                'paymentReference' => $paymongoPaymentRef,
+                'paymentProofFiles' => $paymentProofFiles
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('Logging failed: ' . $e->getMessage());
+        }
+
+        $billing = Billing::with('userProfile.user')->find($billingId);
+
+        if (!$billing) {
+            Log::warning('Billing not found for ID: ' . $billingId);
+            return response()->json(['message' => 'Billing not found'], 404);
+        }
+
+        $paymentProofsUrls = [];
+        if (!empty($paymentProofFiles) && is_array($paymentProofFiles)) {
+            foreach ($paymentProofFiles as $file) {
+                $paymentProofsUrls[] = $file->store('payment_proofs', 'public');
+            }
+        }
+
+        $payment = Payment::create([
+            'billing_id' => $billing->id,
+            'payable_id' => $billing->billable_id,
+            'payable_type' => $billing->billable_type,
+            'profile_id' => $billing->profile_id,
+            'amount_paid' => $phpAmountPaid,
+            'payment_method' => $paymentMethod,
+            'paymongo_payment_reference' => $paymongoPaymentRef,
+            'payment_proof_url' => json_encode($paymentProofsUrls),
+            'status' => 'paid',
+        ]);
+
+        $billing->amount_paid += $phpAmountPaid;
+        // $billing->remaining_balance = $billing->total_amount - $billing->amount_paid;
+        $billing->remaining_balance = max(0, $billing->total_amount - $billing->amount_paid);
+
+
+        if ($billing->remaining_balance <= 0) {
+            $billing->status = 'paid';
+        
+
+        } else {
+            $billing->status = 'partial';
+        }
+   
+        $billing->is_advance_rent_payment = true;
+
+        $billing->save();
+
+        $notificationData = [
+            'user_id' => $billing->userProfile->user_id,
+            'is_read' => 0,
+        ];
+        
+        $user = optional($billing->userProfile)->user; // Get the user
+        
+        // Custom notification for advance payment
+        $notificationData['title'] = 'Advance Payment Successful';
+        $notificationData['message'] = 'Your advance rent payment has been received. Thank you for paying early!';
+        
+        // Optional: Update steps if needed
+        if ($user) {
+            $user->steps = '6'; // or whatever step fits your flow
+            $user->save();
+        }
+        
+        // Attach notification
+        $payment->notifications()->create($notificationData);
     }
 }

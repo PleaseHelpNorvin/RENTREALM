@@ -24,6 +24,7 @@ return new class extends Migration
 
             $table->enum('status', ['pending', 'partial', 'paid'])->default('pending'); // Billing status
             $table->string('checkout_session_id')->nullable();
+            $table->boolean('is_advance_rent_payment')->default(false); // Track if it's an advance payment
             $table->timestamps();
         });
     }

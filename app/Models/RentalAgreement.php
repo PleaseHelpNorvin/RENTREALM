@@ -61,6 +61,7 @@ class RentalAgreement extends Model
                 'remaining_balance' => $rentalAgreement->total_amount, 
                 'billing_month' => Carbon::parse($rentalAgreement->rent_start_date)->startOfMonth(),
                 'status' => 'pending',
+                // 'is_advance_payment' => false,
             ]);
 
             Log::info('Billing created successfully for RentalAgreement ID: ' . $rentalAgreement->id);
